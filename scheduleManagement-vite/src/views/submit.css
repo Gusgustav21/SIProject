@@ -1,7 +1,7 @@
 /* Contenedor principal a dos columnas */
 .submit-container {
   display: flex;
-  gap: 25px;
+  gap: 15px;
   height: 100%;
 }
 
@@ -9,31 +9,20 @@
 .form-section {
   flex: 3;
   background-color: #ffffff;
-  padding: 30px;
+  padding: 20px;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
   border: 1px solid #e1e4e8;
   overflow-y: auto;
 }
 
-.form-control {
-  padding: 12px;
-  border: 1px solid #d1d5da;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  background-color: #f8f9fa;
-  color: #24292e; /* <--- ESTA LÍNEA ES LA QUE FALTA: asegura que el texto sea oscuro */
-  display: block;  /* Asegura que el elemento ocupe espacio correctamente */
-  width: 100%;     /* Asegura que se expanda al contenedor */
-}
-
 /* Selector de tipo de registro (Evento o Espacio) */
 .toggle-group {
   display: flex;
   gap: 10px;
-  margin-bottom: 25px;
+  margin-bottom: 15px;
   background-color: #f8f9fa;
-  padding: 6px;
+  padding: 4px;
   border-radius: 8px;
 }
 
@@ -59,7 +48,7 @@
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  gap: 10px;
 }
 .full-width { grid-column: span 2; }
 
@@ -71,17 +60,20 @@
 }
 .form-group label { font-size: 0.9rem; font-weight: 600; color: #24292e; }
 .form-control {
-  padding: 12px;
+  padding: 8px 12px;
   border: 1px solid #d1d5da;
   border-radius: 6px;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   background-color: #f8f9fa;
+  color: #24292e; /* <--- ESTA LÍNEA ES LA QUE FALTA: asegura que el texto sea oscuro */
+  display: block;  /* Asegura que el elemento ocupe espacio correctamente */
+  width: 100%;     /* Asegura que se expanda al contenedor */
 }
 .form-control:focus { outline: none; border-color: #008b8b; background-color: #fff; }
 
 .submit-btn {
   width: 100%;
-  padding: 14px;
+  padding: 10px;
   background: #24292e;
   color: white;
   border: none;
@@ -89,7 +81,7 @@
   font-size: 1.05rem;
   cursor: pointer;
   font-weight: bold;
-  margin-top: 20px;
+  margin-top: 15px;
 }
 .submit-btn:hover { background: #008b8b; }
 
