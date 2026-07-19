@@ -11,12 +11,13 @@
   width: 260px;
   background-color: #2b3238;
   color: white;
-  padding: 20px;
+  padding: 15px;          /* Reducido de 20px a 15px */
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 10px;              /* Reducido de 15px a 10px */
   flex-shrink: 0;
+  box-sizing: border-box; /* Asegura que el padding no sume tamaño extra */
 }
 
 .stat-card {

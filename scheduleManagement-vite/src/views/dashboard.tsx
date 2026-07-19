@@ -47,14 +47,27 @@ export default function Dashboard({ events, spaces }: DashboardProps) {
           <strong>{cancelados}</strong>
         </div>
 
-        {/* Gráfico simulado (Mockup) como en la imagen */}
+        {/* Gráfico TOTALMENTE REAL y Dinámico */}
         <div className="chart-placeholder">
           <h4>Uso de Espacios</h4>
-          <p>(Auditorio, Lab 1, Salón 5)</p>
+          <p>(Conteo real por aula)</p>
           <div className="mock-chart">
-            <div className="bar" style={{ height: '90%' }}></div>
-            <div className="bar" style={{ height: '40%' }}></div>
-            <div className="bar" style={{ height: '20%' }}></div>
+            {spaces.map(space => {
+              // 1. Contamos cuántos eventos tiene asignados ESTE espacio específico
+              const conteoEventos = events.filter(e => e.espacioId === space.id).length;
+              
+              // 2. Calculamos un porcentaje visual (ej. max 5 eventos para el 100% de la barra)
+              const porcentajeAltura = Math.min((conteoEventos / 5) * 100, 100);
+
+              return (
+                <div 
+                  key={space.id} 
+                  className="bar" 
+                  style={{ height: `${porcentajeAltura || 5}%` }} // Mínimo 5% si está en 0 para que sea visible
+                  title={`${space.nombre}: ${conteoEventos} eventos`}
+                />
+              );
+            })}
           </div>
         </div>
 

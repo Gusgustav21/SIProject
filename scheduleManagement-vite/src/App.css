@@ -249,7 +249,7 @@
 
 /* Estilos de la Barra Lateral */
 .sidebar {
-  width: 240px;
+  width: 120px;
   background-color: #1e1e24; /* Un tono oscuro elegante */
   display: flex;
   flex-direction: column;
