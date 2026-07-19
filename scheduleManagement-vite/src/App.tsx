@@ -7,15 +7,21 @@ import Reports from './views/reports'
 import Submit from './views/submit'
 import Review from './views/review'
 
+import { EVENTOS_INICIALES, type Event } from './data/events'
+import { ESPACIOS_INICIALES, type Spaces } from './data/spaces'
+
 function App() {
   // 2. Estado para saber qué vista está activa ('dashboard', 'calendar' o 'reports')
   const [currentView, setCurrentView] = useState('dashboard')
+
+  const [events, setEvents] = useState<Event[]>(EVENTOS_INICIALES)
+  const [spaces, setSpaces] = useState<Spaces[]>(ESPACIOS_INICIALES)
 
   // 3. Función auxiliar para renderizar la vista seleccionada dinámicamente
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':
-        return <Dashboard />
+        return <Dashboard events={events} spaces={spaces} />
       case 'calendar':
         return <Calendar />
       case 'reports':
@@ -25,7 +31,7 @@ function App() {
       case 'review': 
         return <Review />
       default:
-        return <Dashboard />
+        return <Dashboard events={events} spaces={spaces} />
     }
   }
 
