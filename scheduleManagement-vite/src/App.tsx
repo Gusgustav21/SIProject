@@ -27,7 +27,7 @@ function App() {
       case 'reports':
         return <Reports />
       case 'submit': 
-        return <Submit />
+      return <Submit events={events} setEvents={setEvents} spaces={spaces} setSpaces={setSpaces} />
       case 'review': 
         return <Review />
       default:

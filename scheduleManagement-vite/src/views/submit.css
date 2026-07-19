@@ -1,0 +1,181 @@
+/* Contenedor principal a dos columnas */
+.submit-container {
+  display: flex;
+  gap: 25px;
+  height: 100%;
+}
+
+/* --- LADO IZQUIERDO: FORMULARIO --- */
+.form-section {
+  flex: 3;
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  border: 1px solid #e1e4e8;
+  overflow-y: auto;
+}
+
+.form-control {
+  padding: 12px;
+  border: 1px solid #d1d5da;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background-color: #f8f9fa;
+  color: #24292e; /* <--- ESTA LÍNEA ES LA QUE FALTA: asegura que el texto sea oscuro */
+  display: block;  /* Asegura que el elemento ocupe espacio correctamente */
+  width: 100%;     /* Asegura que se expanda al contenedor */
+}
+
+/* Selector de tipo de registro (Evento o Espacio) */
+.toggle-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  background-color: #f8f9fa;
+  padding: 6px;
+  border-radius: 8px;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+  font-weight: 600;
+  color: #586069;
+  transition: all 0.2s ease;
+}
+
+.toggle-btn.active {
+  background: #008b8b;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0,139,139,0.3);
+}
+
+/* Estilos de los inputs */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+.full-width { grid-column: span 2; }
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+.form-group label { font-size: 0.9rem; font-weight: 600; color: #24292e; }
+.form-control {
+  padding: 12px;
+  border: 1px solid #d1d5da;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background-color: #f8f9fa;
+}
+.form-control:focus { outline: none; border-color: #008b8b; background-color: #fff; }
+
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: #24292e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.05rem;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 20px;
+}
+.submit-btn:hover { background: #008b8b; }
+
+
+/* --- LADO DERECHO: LISTA DE ESPACIOS --- */
+.spaces-section {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.spaces-header {
+  margin: 0;
+  color: #24292e;
+  font-size: 1.2rem;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e1e4e8;
+}
+
+.space-card {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+  border-left: 6px solid #ccc;
+  transition: transform 0.2s ease;
+}
+.space-card:hover { transform: translateY(-2px); }
+
+/* Colores congruentes por tipo de espacio */
+.space-card.laboratorio { border-left-color: #17a2b8; } /* Azul/Cyan para computación */
+.space-card.salon { border-left-color: #ffc107; }       /* Amarillo/Naranja para aulas */
+.space-card.auditorio { border-left-color: #6f42c1; }   /* Morado para conferencias */
+
+.space-info h4 { margin: 0 0 4px 0; color: #24292e; font-size: 1.05rem; }
+.space-info p { margin: 0; font-size: 0.85rem; color: #586069; display: flex; align-items: center; gap: 5px; }
+
+.badge {
+  padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; color: white; text-transform: uppercase;
+}
+.badge.laboratorio { background: #17a2b8; }
+.badge.salon { background: #ffc107; color: #24292e; }
+.badge.auditorio { background: #6f42c1; }
+
+.space-capacity {
+  text-align: center;
+  background: #f1f8ff;
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 1px solid #c8e1ff;
+}
+.space-capacity span { display: block; font-size: 0.7rem; color: #586069; font-weight: bold; }
+.space-capacity strong { display: block; font-size: 1.6rem; color: #0366d6; line-height: 1.1; }
+
+
+/* --- MODAL DE AVISO (Centro de pantalla) --- */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 9999;
+}
+.modal-content {
+  background: white; padding: 30px; border-radius: 12px;
+  text-align: center; max-width: 420px; width: 90%;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  animation: popIn 0.3s ease;
+}
+@keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+.modal-content.error { border-top: 8px solid #dc3545; }
+.modal-content.success { border-top: 8px solid #28a745; }
+.modal-content h3 { margin: 0 0 15px 0; font-size: 1.4rem; }
+.modal-content.error h3 { color: #dc3545; }
+.modal-content.success h3 { color: #28a745; }
+
+.modal-btn {
+  margin-top: 20px; padding: 12px 24px; border: none; border-radius: 6px;
+  cursor: pointer; font-weight: bold; font-size: 1rem; color: white;
+}
+.modal-btn.error { background: #dc3545; }
+.modal-btn.success { background: #28a745; }
