@@ -1,29 +1,10 @@
 export default function Calendar() {
-    return (
-      <div style={styles.card}>
-        <h2 style={styles.title}>📅 Vista de Calendario y Agenda</h2>
-        <p style={styles.text}>
-          Aquí se renderizará la cuadrícula mensual o semanal para consultar las actividades planificadas y los horarios reservados en los laboratorios y salones.
-        </p>
-      </div>
-    )
-  }
-  
-  const styles = {
-    card: {
-      backgroundColor: '#ffffff',
-      padding: '24px',
-      borderRadius: '12px',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
-      border: '1px solid #e1e4e8',
-    },
-    title: {
-      margin: '0 0 12px 0',
-      color: '#008b8b',
-    },
-    text: {
-      color: '#586069',
-      lineHeight: '1.6',
-      margin: 0,
-    }
-  }
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-[0_4px_6px_rgba(0,0,0,0.05)] border border-[#e1e4e8]">
+      <h2 className="m-0 mb-3 text-[#008b8b] text-xl font-bold">📅 Vista de Calendario y Agenda</h2>
+      <p className="text-[#586069] leading-relaxed m-0">
+        Aquí se renderizará la cuadrícula mensual o semanal para consultar las actividades planificadas y los horarios reservados en los laboratorios y salones.
+      </p>
+    </div>
+  )
+}

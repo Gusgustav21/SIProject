@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import './App.css'
 
 import Dashboard from './views/dashboard'
 import Calendar from './views/calendar'
@@ -36,51 +35,61 @@ function App() {
   }
 
   return (
-    <div className="app-container">
+    <div className="flex flex-col min-h-screen">
       {/* Barra superior institucional usando semántica nativa */}
-      <header className="main-header">
-        <div className="logo-container">
-          <h1 className="header-title">FaCyT Event Manager</h1>
-          <span className="ia-badge">IA ASISTIDO</span>
+      <header className="flex justify-between items-center bg-[#008b8b] px-8 h-[60px] shadow-[0_2px_4px_rgba(0,0,0,0.1)]">
+        <div className="flex items-center gap-4">
+          <h1 className="text-white text-[1.4rem] font-bold m-0">FaCyT Event Manager</h1>
+          <span className="bg-[#b57edc] text-white text-[0.75rem] font-bold px-2.5 py-1 rounded-[12px]">IA ASISTIDO</span>
         </div>
-        <div className="profile-icon">👤</div>
+        <div className="text-white text-[1.3rem] cursor-pointer">👤</div>
       </header>
 
       {/* Contenedor del cuerpo principal (Sidebar + Contenido) */}
-      <div className="main-layout">
+      <div className="flex flex-1 w-full">
 
       {/* BARRA LATERAL (SIDEBAR) */}
-      <nav className="sidebar">
+      <nav className="w-[120px] bg-[#1e1e24] flex flex-col py-5 px-2.5 gap-3 border-r border-[#2d2d34]">
           <button 
-            className={`sidebar-btn ${currentView === 'dashboard' ? 'active' : ''}`}
+            className={`w-full border-none py-3 px-4 text-left text-base rounded-lg cursor-pointer transition-all duration-200 hover:bg-white/8 hover:text-white ${
+              currentView === 'dashboard' ? 'bg-[#008b8b] text-white font-bold' : 'bg-transparent text-[#c9d1d9]'
+            }`}
             onClick={() => setCurrentView('dashboard')}
           >
             📊 Dashboard
           </button>
 
           <button 
-            className={`sidebar-btn ${currentView === 'calendar' ? 'active' : ''}`}
+            className={`w-full border-none py-3 px-4 text-left text-base rounded-lg cursor-pointer transition-all duration-200 hover:bg-white/8 hover:text-white ${
+              currentView === 'calendar' ? 'bg-[#008b8b] text-white font-bold' : 'bg-transparent text-[#c9d1d9]'
+            }`}
             onClick={() => setCurrentView('calendar')}
           >
             📅 Calendario
           </button>
 
           <button 
-            className={`sidebar-btn ${currentView === 'reports' ? 'active' : ''}`}
+            className={`w-full border-none py-3 px-4 text-left text-base rounded-lg cursor-pointer transition-all duration-200 hover:bg-white/8 hover:text-white ${
+              currentView === 'reports' ? 'bg-[#008b8b] text-white font-bold' : 'bg-transparent text-[#c9d1d9]'
+            }`}
             onClick={() => setCurrentView('reports')}
           >
             📋 Reportes
           </button>
 
           <button 
-            className={`sidebar-btn ${currentView === 'submit' ? 'active' : ''}`}
+            className={`w-full border-none py-3 px-4 text-left text-base rounded-lg cursor-pointer transition-all duration-200 hover:bg-white/8 hover:text-white ${
+              currentView === 'submit' ? 'bg-[#008b8b] text-white font-bold' : 'bg-transparent text-[#c9d1d9]'
+            }`}
             onClick={() => setCurrentView('submit')}
           >
             ✍️ Registrar
           </button>
 
           <button 
-            className={`sidebar-btn ${currentView === 'review' ? 'active' : ''}`}
+            className={`w-full border-none py-3 px-4 text-left text-base rounded-lg cursor-pointer transition-all duration-200 hover:bg-white/8 hover:text-white ${
+              currentView === 'review' ? 'bg-[#008b8b] text-white font-bold' : 'bg-transparent text-[#c9d1d9]'
+            }`}
             onClick={() => setCurrentView('review')}
           >
             ⚙️ Revisar
@@ -91,7 +100,7 @@ function App() {
 
 
       {/* ESPACIO CENTRAL VIVO */}
-      <main className="content-area">
+      <main className="flex-1 p-[30px] bg-[#f8f9fa] overflow-y-auto">
           {renderView()}
         </main>
 
