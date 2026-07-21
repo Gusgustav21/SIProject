@@ -41,11 +41,17 @@ export default function Submit() {
       return;
     }
 
-    // 🔴 VALIDACIÓN DE NEGOCIO: Capacidad vs Asistentes
+    // 🔴 VALIDACIÓN DE NEGOCIO: Capacidad vs Asistentes y Rango horario
     if (Number(asistentes) > espacioSeleccionado.capacidad) {
       setModalMessage({ 
         type: 'error', 
         text: `¡Aforo excedido! Has indicado ${asistentes} asistentes, pero el espacio "${espacioSeleccionado.nombre}" tiene una capacidad máxima de solo ${espacioSeleccionado.capacidad} personas.` 
+      });
+      return;
+    }else if (horaInicio >= horaFin){
+      setModalMessage({ 
+        type: 'error', 
+        text: `¡Rango horario incorrecto!` 
       });
       return;
     }

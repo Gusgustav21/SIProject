@@ -44,7 +44,7 @@ function App() {
       <div className="flex flex-1 w-full">
 
       {/* BARRA LATERAL (SIDEBAR) */}
-      <nav className="w-[120px] bg-[#1e1e24] flex flex-col py-5 px-2.5 gap-3 border-r border-[#2d2d34]">
+      <nav className="w-[165px] bg-[#1e1e24] flex flex-col py-5 px-2.5 gap-3 border-r border-[#2d2d34]">
           <button 
             className={`w-full border-none py-3 px-4 text-left text-base rounded-lg cursor-pointer transition-all duration-200 hover:bg-white/8 hover:text-white ${
               currentView === 'dashboard' ? 'bg-[#008b8b] text-white font-bold' : 'bg-transparent text-[#c9d1d9]'
