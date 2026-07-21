@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import type { Event } from '../data/events';
 import type { Spaces } from '../data/spaces';
+import { useEventStore } from '../stores/useEventStore';
+import { useSpaceStore } from '../stores/useSpaceStore';
 
-interface SubmitProps {
-  events: Event[];
-  setEvents: React.Dispatch<React.SetStateAction<Event[]>>;
-  spaces: Spaces[];
-  setSpaces: React.Dispatch<React.SetStateAction<Spaces[]>>;
-}
+export default function Submit() {
+  // Consumiendo stores globales de Zustand (con persistencia en localStorage)
+  const addEvent = useEventStore((state) => state.addEvent);
+  const spaces = useSpaceStore((state) => state.spaces);
+  const addSpace = useSpaceStore((state) => state.addSpace);
 
-export default function Submit({ events, setEvents, spaces, setSpaces }: SubmitProps) {
   // Selector para saber qué formulario mostrar
   const [mode, setMode] = useState<'evento' | 'espacio'>('evento');
   
@@ -61,7 +61,8 @@ export default function Submit({ events, setEvents, spaces, setSpaces }: SubmitP
       estado: 'solicitado' // Todo evento entra como solicitado por defecto
     };
 
-    setEvents([...events, nuevoEvento]);
+    // Guardamos en el store Zustand (persiste automáticamente en localStorage)
+    addEvent(nuevoEvento);
     setModalMessage({ type: 'success', text: 'Evento registrado con éxito. Se encuentra "En Revisión".' });
     
     // Limpiar formulario
@@ -79,7 +80,8 @@ export default function Submit({ events, setEvents, spaces, setSpaces }: SubmitP
       ubicacion
     };
 
-    setSpaces([...spaces, nuevoEspacio]);
+    // Guardamos en el store Zustand (persiste automáticamente en localStorage)
+    addSpace(nuevoEspacio);
     setModalMessage({ type: 'success', text: 'El nuevo espacio ha sido agregado correctamente al catálogo de la FaCyT.' });
     
     // Limpiar formulario

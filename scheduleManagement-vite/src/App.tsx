@@ -6,31 +6,26 @@ import Reports from './views/reports'
 import Submit from './views/submit'
 import Review from './views/review'
 
-import { EVENTOS_INICIALES, type Event } from './data/events'
-import { ESPACIOS_INICIALES, type Spaces } from './data/spaces'
-
 function App() {
-  // 2. Estado para saber qué vista está activa ('dashboard', 'calendar' o 'reports')
+  // Estado para saber qué vista está activa ('dashboard', 'calendar' o 'reports')
   const [currentView, setCurrentView] = useState('dashboard')
 
-  const [events, setEvents] = useState<Event[]>(EVENTOS_INICIALES)
-  const [spaces, setSpaces] = useState<Spaces[]>(ESPACIOS_INICIALES)
-
-  // 3. Función auxiliar para renderizar la vista seleccionada dinámicamente
+  // Los datos de events y spaces ahora viven en los Zustand stores
+  // (useEventStore y useSpaceStore), que persisten automáticamente en localStorage.
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':
-        return <Dashboard events={events} spaces={spaces} />
+        return <Dashboard />
       case 'calendar':
         return <Calendar />
       case 'reports':
         return <Reports />
       case 'submit': 
-      return <Submit events={events} setEvents={setEvents} spaces={spaces} setSpaces={setSpaces} />
+        return <Submit />
       case 'review': 
         return <Review />
       default:
-        return <Dashboard events={events} spaces={spaces} />
+        return <Dashboard />
     }
   }
 

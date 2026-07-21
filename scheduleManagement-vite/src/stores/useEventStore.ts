@@ -1,11 +1,14 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { EVENTOS_INICIALES, type Event } from '../data/events';
 
-interface EventState {
+// Solo los datos que se persisten en localStorage (sin las funciones/acciones)
+interface PersistedEventState {
   events: Event[];
-  
-  // Acciones sincrónicas locales (Persistidas automáticamente en localStorage)
+}
+
+interface EventState extends PersistedEventState {
+  // Acciones sincrónicas locales
   addEvent: (newEvent: Event) => void;
   updateEventStatus: (id: string, estado: Event['estado']) => void;
   setEvents: (events: Event[]) => void;
@@ -13,8 +16,8 @@ interface EventState {
 
   // NOTA PARA FUTURA INTEGRACIÓN DE BASE DE DATOS:
   // Cuando se conecte un Backend/API REST, aquí se podrán incorporar métodos como:
-  // fetchEventsFromApi: async () => { ... },
-  // saveEventToDb: async (event: Event) => { ... }
+  // fetchEventsFromApi: async () => { const data = await api.getEvents(); setEvents(data); },
+  // saveEventToDb: async (event: Event) => { await api.postEvent(event); addEvent(event); }
 }
 
 export const useEventStore = create<EventState>()(
@@ -39,7 +42,12 @@ export const useEventStore = create<EventState>()(
       resetEvents: () => set({ events: EVENTOS_INICIALES }),
     }),
     {
-      name: 'facyt_events_storage', // Clave principal guardada en LocalStorage
+      name: 'facyt_events_storage',
+      storage: createJSONStorage(() => localStorage),
+      // Solo persiste los datos, no las funciones
+      partialize: (state): PersistedEventState => ({
+        events: state.events,
+      }),
     }
   )
 );

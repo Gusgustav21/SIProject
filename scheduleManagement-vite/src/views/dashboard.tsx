@@ -1,14 +1,12 @@
-import type { Event } from '../data/events';
-import type { Spaces } from '../data/spaces';
+import { useEventStore } from '../stores/useEventStore';
+import { useSpaceStore } from '../stores/useSpaceStore';
 
-interface DashboardProps {
-  events: Event[];
-  spaces: Spaces[];
-}
-
-export default function Dashboard({ events, spaces }: DashboardProps) {
+export default function Dashboard() {
+  // Consumiendo directamente los stores globales de Zustand
+  const events = useEventStore((state) => state.events);
+  const spaces = useSpaceStore((state) => state.spaces);
   
-  // 1. LÓGICA DE NEGOCIO: Calculamos las métricas dinámicamente
+  // LÓGICA DE NEGOCIO: Calculamos las métricas dinámicamente
   const totalEvents = events.length;
   const solicitados = events.filter(e => e.estado === 'solicitado').length;
   const aprobados = events.filter(e => e.estado === 'aprobado').length;
@@ -52,17 +50,17 @@ export default function Dashboard({ events, spaces }: DashboardProps) {
           <p className="m-0 mb-[15px] text-[0.8rem] text-[#a9b2b9]">(Conteo real por aula)</p>
           <div className="flex items-end justify-around h-[120px] border-b border-l border-[#454d55] p-2.5 pb-0 px-1.25">
             {spaces.map(space => {
-              // 1. Contamos cuántos eventos tiene asignados ESTE espacio específico
+              // Contamos cuántos eventos tiene asignados ESTE espacio específico
               const conteoEventos = events.filter(e => e.espacioId === space.id).length;
               
-              // 2. Calculamos un porcentaje visual (ej. max 5 eventos para el 100% de la barra)
+              // Calculamos un porcentaje visual (ej. max 5 eventos para el 100% de la barra)
               const porcentajeAltura = Math.min((conteoEventos / 5) * 100, 100);
 
               return (
                 <div 
                   key={space.id} 
                   className="w-[30px] bg-[#38a3a5] rounded-t-[2px]" 
-                  style={{ height: `${porcentajeAltura || 5}%` }} // Mínimo 5% si está en 0 para que sea visible
+                  style={{ height: `${porcentajeAltura || 5}%` }}
                   title={`${space.nombre}: ${conteoEventos} eventos`}
                 />
               );
@@ -92,8 +90,7 @@ export default function Dashboard({ events, spaces }: DashboardProps) {
               {events.map((evento) => (
                 <tr key={evento.id} className="hover:bg-[#f8f9fa] transition-colors">
                   <td className="py-3.5 px-4 border-b border-[#e1e4e8] text-[0.95rem]">{evento.titulo}</td>
-                  {/* Como no definimos 'tipo' en la interfaz inicial, usamos un valor por defecto para el diseño */}
-                  <td className="py-3.5 px-4 border-b border-[#e1e4e8] text-[0.95rem]">Actividad</td> 
+                  <td className="py-3.5 px-4 border-b border-[#e1e4e8] text-[0.95rem]">Actividad</td>
                   <td className="py-3.5 px-4 border-b border-[#e1e4e8] text-[0.95rem]">{evento.responsable}</td>
                   <td className="py-3.5 px-4 border-b border-[#e1e4e8] text-[0.95rem]">{getSpaceName(evento.espacioId)}</td>
                   <td className="py-3.5 px-4 border-b border-[#e1e4e8] text-[0.95rem]">{`${evento.fecha}, ${evento.horaInicio}-${evento.horaFin}`}</td>
@@ -103,7 +100,6 @@ export default function Dashboard({ events, spaces }: DashboardProps) {
                       evento.estado === 'solicitado' ? 'bg-[#fff3cd] text-[#856404] border border-[#ffeeba]' :
                       'bg-[#f8d7da] text-[#721c24] border border-[#f5c6cb]'
                     }`}>
-                      {/* Adaptamos el texto para que coincida con tu imagen */}
                       {evento.estado === 'solicitado' ? 'En Revisión' : 
                        evento.estado === 'aprobado' ? 'Aprobado' : 'Cancelado'}
                     </span>
