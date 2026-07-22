@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-// Asegúrate de importar correctamente tus stores
 import { useEventStore } from '../stores/useEventStore';
 import { useSpaceStore } from '../stores/useSpaceStore';
 import type { Event } from '../data/events';
@@ -16,7 +15,7 @@ export default function Review() {
   const [rightSelectedItem, setRightSelectedItem] = useState<Event | Spaces | null>(null);
   const [modalMessage, setModalMessage] = useState<{ type: 'error' | 'success', text: string } | null>(null);
 
-  // --- ESTADOS: Edición de Evento (Modal Derecho) ---
+  // --- ESTADOS: Edición de Evento ---
   const [isEditing, setIsEditing] = useState(false);
   const [editEspacioId, setEditEspacioId] = useState('');
   const [editFecha, setEditFecha] = useState('');
@@ -24,32 +23,28 @@ export default function Review() {
   const [editHoraFin, setEditHoraFin] = useState('');
   const [editAsistentes, setEditAsistentes] = useState<number | ''>('');
 
-  // --- ESTADOS: Filtros y Ordenamiento (Columna Derecha) ---
+  // --- ESTADOS: Filtros y Ordenamiento ---
   const [sortBy, setSortBy] = useState<'fecha' | 'tipo'>('fecha');
-  const [filterType, setFilterType] = useState<string>('all'); // 'all', 'laboratorio', 'salon', etc.
+  const [filterType, setFilterType] = useState<string>('all');
 
   // --- LÓGICA DE NEGOCIO: Conflictos ---
-  // Revisa si un evento choca con OTRO evento específico
   const checkOverlap = (ev1: Event, ev2: Event) => {
     if (ev1.id === ev2.id) return false;
     if (ev1.espacioId !== ev2.espacioId || ev1.fecha !== ev2.fecha) return false;
-    // Lógica de solapamiento de rangos de horas
     return (ev1.horaInicio < ev2.horaFin && ev1.horaFin > ev2.horaInicio);
   };
 
-  // Revisa si un evento choca con CUALQUIER evento aprobado
   const hasConflictWithApproved = (targetEvent: Event) => {
     return events.some(e => e.estado === 'aprobado' && checkOverlap(targetEvent, e));
   };
 
-  // Revisa si un evento choca con cualquier otro (aprobado o en revisión) para pintarlo de rojo
   const hasAnyConflict = (targetEvent: Event) => {
     return events.some(
       e => e.estado !== 'rechazado' && e.estado !== 'cancelado' && checkOverlap(targetEvent, e)
     );
   };
 
-  // --- DERIVACIÓN DE DATOS (Memorizada) ---
+  // --- DERIVACIÓN DE DATOS ---
   const eventsInReview = useMemo(() => {
     return events.filter(e => e.estado === 'solicitado');
   }, [events]);
@@ -57,14 +52,12 @@ export default function Review() {
   const rightListFiltered = useMemo(() => {
     if (rightTab === 'events') {
       let list = [...events];
-      // Filtrar por tipo de espacio si no es 'all'
       if (filterType !== 'all') {
         list = list.filter(e => {
           const sp = spaces.find(s => s.id === e.espacioId);
           return sp?.tipo === filterType;
         });
       }
-      // Ordenar por fecha
       if (sortBy === 'fecha') {
         list.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
       }
@@ -74,7 +67,6 @@ export default function Review() {
       if (filterType !== 'all') {
         list = list.filter(s => s.tipo === filterType);
       }
-      // Ordenar por tipo
       if (sortBy === 'tipo') {
         list.sort((a, b) => a.tipo.localeCompare(b.tipo));
       }
@@ -85,7 +77,7 @@ export default function Review() {
   // --- HANDLERS ---
   const handleSelectRightItem = (item: Event | Spaces) => {
     setRightSelectedItem(item);
-    setIsEditing(false); // Reinicia el modo edición al seleccionar un nuevo elemento
+    setIsEditing(false);
 
     if (rightTab === 'events') {
       const ev = item as Event;
@@ -130,9 +122,6 @@ export default function Review() {
       return;
     }
 
-    
-
-    // --- VALIDACIÓN DE CAPACIDAD DEL NUEVO ESPACIO ---
     const selectedSpace = spaces.find(s => s.id === editEspacioId);
     const numAsistentes = editAsistentes === '' ? (evento.asistentes || 0) : Number(editAsistentes);
 
@@ -150,10 +139,9 @@ export default function Review() {
       fecha: editFecha,
       horaInicio: editHoraInicio,
       horaFin: editHoraFin,
-      asistentes: numAsistentes // 👈 Se agrega para la verificación temporal
+      asistentes: numAsistentes
     };
 
-    // Validar solapamiento con otros eventos APROBADOS
     const hasConflict = events.some(
       e => e.id !== evento.id && e.estado === 'aprobado' && checkOverlap(updatedTempEvent, e)
     );
@@ -166,13 +154,12 @@ export default function Review() {
       return;
     }
 
-    // Guardar cambios en el store de Zustand
     updateEvent(evento.id, {
       espacioId: editEspacioId,
       fecha: editFecha,
       horaInicio: editHoraInicio,
       horaFin: editHoraFin,
-      asistentes: numAsistentes // 👈 ¡AQUÍ FALTABA ENVIARLO AL STORE!
+      asistentes: numAsistentes
     });
 
     setIsEditing(false);
@@ -181,7 +168,6 @@ export default function Review() {
   };
 
   const handleDeleteRightItem = (item: Event | Spaces) => {
-    // Validar si es un espacio con eventos asociados
     if (rightTab === 'spaces') {
       const hasAssociatedEvents = events.some(e => e.espacioId === item.id);
       if (hasAssociatedEvents) {
@@ -194,13 +180,11 @@ export default function Review() {
       }
     }
 
-    // Modal de confirmación nativo
     const nombreItem = rightTab === 'events' ? (item as Event).titulo : (item as Spaces).nombre;
     const confirmDelete = window.confirm(`¿Estás seguro de que deseas eliminar permanentemente "${nombreItem}"?`);
 
     if (!confirmDelete) return;
 
-    // Proceder con la eliminación
     if (rightTab === 'events') {
       deleteEvent(item.id);
       setModalMessage({ type: 'success', text: 'Evento eliminado correctamente.' });
@@ -212,28 +196,35 @@ export default function Review() {
     setRightSelectedItem(null);
   };
 
-  // Funciones auxiliares de UI
   const getSpaceDetails = (id: string) => spaces.find(s => s.id === id);
   
-  const getCardColors = (tipo?: string) => {
+  const getCardBorderColor = (tipo?: string) => {
     switch (tipo) {
-      case 'laboratorio': return 'border-l-[#17a2b8] bg-[#eef9fa]';
-      case 'salon': return 'border-l-[#ffc107] bg-[#fffcf3]';
-      case 'auditorio': return 'border-l-[#6f42c1] bg-[#f5f0fa]';
-      default: return 'border-l-gray-400 bg-gray-50';
+      case 'laboratorio': return 'border-l-cyan-500';
+      case 'salon': return 'border-l-amber-500';
+      case 'auditorio': return 'border-l-indigo-500';
+      default: return 'border-l-slate-400';
     }
   };
 
   return (
-    <div className="flex gap-5 h-full max-h-[calc(100vh-120px)]">
+    <div className="flex flex-col lg:flex-row gap-6 h-full max-h-[calc(100vh-120px)]">
       
       {/* ======================= COLUMNA IZQUIERDA: EN REVISIÓN ======================= */}
-      <section className="flex-1 bg-white p-5 rounded-[12px] shadow-sm border border-[#e1e4e8] overflow-y-auto">
-        <h2 className="m-0 mb-4 text-[#008b8b] text-xl font-bold border-b pb-2">📋 En Revisión</h2>
+      <section className="flex-1 bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-y-auto">
+        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
+          <span className="text-xl">📋</span>
+          <h2 className="m-0 text-slate-800 text-lg font-bold">En Revisión</h2>
+          <span className="ml-auto bg-amber-50 text-amber-700 border border-amber-200 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+            {eventsInReview.length} pendientes
+          </span>
+        </div>
         
         <div className="flex flex-col gap-3">
           {eventsInReview.length === 0 ? (
-            <p className="text-gray-500 text-center italic mt-4">No hay eventos pendientes por revisar.</p>
+            <div className="py-12 text-center text-slate-400 text-sm italic">
+              No hay solicitudes pendientes por revisar.
+            </div>
           ) : (
             eventsInReview.map(evento => {
               const espacio = getSpaceDetails(evento.espacioId);
@@ -243,17 +234,25 @@ export default function Review() {
                 <div 
                   key={evento.id}
                   onClick={() => setLeftSelectedEvent(evento)}
-                  className={`p-4 rounded-[8px] cursor-pointer border shadow-sm transition-transform hover:-translate-y-1 ${
-                    isConflicting ? 'bg-red-100 border-red-300' : 'bg-yellow-50 border-yellow-200'
+                  className={`p-4 rounded-xl cursor-pointer border transition-all hover:shadow-md ${
+                    isConflicting 
+                      ? 'bg-rose-50/60 border-rose-200 hover:border-rose-300' 
+                      : 'bg-amber-50/40 border-amber-200/80 hover:border-amber-300'
                   }`}
                 >
-                  <h4 className="m-0 text-[1.1rem] font-bold text-gray-800">{evento.titulo}</h4>
-                  <p className="m-0 text-[0.9rem] text-gray-600 mt-1">📍 {espacio?.nombre || 'Espacio Desconocido'}</p>
-                  <p className="m-0 text-[0.85rem] font-mono text-gray-500 mt-1">
-                    📅 {evento.fecha} | ⏰ {evento.horaInicio} - {evento.horaFin}
+                  <div className="flex justify-between items-start mb-1">
+                    <h4 className="m-0 text-sm font-bold text-slate-800">{evento.titulo}</h4>
+                  </div>
+                  <p className="m-0 text-xs text-slate-600 flex items-center gap-1 mt-1">
+                    📍 {espacio?.nombre || 'Espacio Desconocido'}
+                  </p>
+                  <p className="m-0 text-xs font-medium text-slate-500 mt-1">
+                    📅 {evento.fecha} &nbsp;|&nbsp; ⏰ {evento.horaInicio} - {evento.horaFin}
                   </p>
                   {isConflicting && (
-                    <span className="text-[0.75rem] font-bold text-red-600 mt-2 block">⚠️ Coincide con otra solicitud/aprobado</span>
+                    <span className="text-[11px] font-semibold text-rose-600 mt-2 flex items-center gap-1">
+                      ⚠️ Coincide con otra solicitud o evento aprobado
+                    </span>
                   )}
                 </div>
               )
@@ -263,65 +262,89 @@ export default function Review() {
       </section>
 
       {/* ======================= COLUMNA DERECHA: GESTIÓN GENERAL ======================= */}
-      <section className="flex-[1.5_1.5_0%] bg-white p-5 rounded-[12px] shadow-sm border border-[#e1e4e8] overflow-y-auto">
+      <section className="flex-[1.5] bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-y-auto">
         
         {/* Toggle Listas */}
-        <div className="flex gap-2 mb-4 bg-gray-100 p-1 rounded-lg">
+        <div className="flex gap-1.5 mb-4 bg-slate-100 p-1 rounded-xl">
           <button 
-            className={`flex-1 py-2 rounded-md font-bold transition-colors ${rightTab === 'events' ? 'bg-gray-800 text-white' : 'text-gray-600 hover:bg-gray-200'}`}
+            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+              rightTab === 'events' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            }`}
             onClick={() => { setRightTab('events'); setRightSelectedItem(null); }}
           >
-            📅 Lista de Eventos
+            📅 Eventos ({events.length})
           </button>
           <button 
-            className={`flex-1 py-2 rounded-md font-bold transition-colors ${rightTab === 'spaces' ? 'bg-gray-800 text-white' : 'text-gray-600 hover:bg-gray-200'}`}
+            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+              rightTab === 'spaces' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            }`}
             onClick={() => { setRightTab('spaces'); setRightSelectedItem(null); }}
           >
-            🏢 Lista de Espacios
+            🏢 Espacios ({spaces.length})
           </button>
         </div>
 
         {/* Filtros */}
-        <div className="flex gap-3 mb-4">
-          <select className="border p-2 rounded-md text-sm flex-1" value={filterType} onChange={e => setFilterType(e.target.value)}>
-            <option value="all">Todos los Tipos</option>
+        <div className="flex gap-2 mb-4">
+          <select 
+            className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl p-2.5 flex-1 focus:outline-none focus:border-cyan-500" 
+            value={filterType} 
+            onChange={e => setFilterType(e.target.value)}
+          >
+            <option value="all">Todos los tipos de espacio</option>
             <option value="laboratorio">Laboratorio</option>
             <option value="salon">Salón de Clases</option>
             <option value="auditorio">Auditorio</option>
           </select>
-          <select className="border p-2 rounded-md text-sm flex-1" value={sortBy} onChange={e => setSortBy(e.target.value as any)}>
+
+          <select 
+            className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl p-2.5 flex-1 focus:outline-none focus:border-cyan-500" 
+            value={sortBy} 
+            onChange={e => setSortBy(e.target.value as any)}
+          >
             <option value="fecha">Ordenar por Fecha</option>
             <option value="tipo">Ordenar por Tipo</option>
           </select>
         </div>
 
-        {/* Lista */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Grilla de Elementos */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {rightListFiltered.map(item => {
             const isEvent = rightTab === 'events';
             const evento = isEvent ? item as Event : null;
             const espacio = isEvent ? getSpaceDetails(evento!.espacioId) : item as Spaces;
-            
-            const cardColors = getCardColors(espacio?.tipo);
+            const cardBorder = getCardBorderColor(espacio?.tipo);
 
             return (
               <div 
                 key={item.id}
                 onClick={() => handleSelectRightItem(item)}
-                className={`p-3 rounded-lg cursor-pointer border-l-[6px] shadow-sm hover:shadow-md transition-shadow ${cardColors}`}
+                className={`p-3.5 bg-slate-50/50 hover:bg-slate-100/80 rounded-xl cursor-pointer border-y border-r border-slate-200 border-l-4 shadow-2xs transition-all ${cardBorder}`}
               >
-                <strong className="block text-gray-800">{isEvent ? evento!.titulo : espacio!.nombre}</strong>
+                <strong className="block text-slate-800 text-sm truncate">
+                  {isEvent ? evento!.titulo : espacio!.nombre}
+                </strong>
+
                 {isEvent && (
-                  <span className={`text-[0.7rem] px-2 py-0.5 rounded-full text-white ${
-                    evento!.estado === 'aprobado' ? 'bg-green-600' :
-                    evento!.estado === 'rechazado' ? 'bg-red-600' :
-                    evento!.estado === 'cancelado' ? 'bg-orange-500' : // 👈 Nuevo color para cancelado
-                    'bg-yellow-500' // 'solicitado'
-                  }`}>
-                    {evento!.estado.toUpperCase()}
-                  </span>
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                      evento!.estado === 'aprobado' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                      evento!.estado === 'realizado' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                      evento!.estado === 'solicitado' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                      evento!.estado === 'cancelado' ? 'bg-slate-100 text-slate-600 border-slate-200' :
+                      'bg-rose-50 text-rose-700 border-rose-200'
+                    }`}>
+                      {evento!.estado === 'solicitado' ? 'En Revisión' : evento!.estado.toUpperCase()}
+                    </span>
+                    <span className="text-[11px] text-slate-500">{evento!.fecha}</span>
+                  </div>
                 )}
-                {!isEvent && <span className="text-sm text-gray-600">Cap: {espacio!.capacidad}</span>}
+
+                {!isEvent && (
+                  <p className="m-0 text-xs text-slate-500 mt-1">
+                    Capacidad: <strong className="text-slate-700">{espacio!.capacidad} personas</strong>
+                  </p>
+                )}
               </div>
             )
           })}
@@ -330,21 +353,38 @@ export default function Review() {
 
       {/* ======================= MODAL: REVISAR EVENTO (Izquierda) ======================= */}
       {leftSelectedEvent && (
-        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50" onClick={() => setLeftSelectedEvent(null)}>
-          <div className="bg-white p-6 rounded-xl w-[90%] max-w-[500px] shadow-2xl" onClick={e => e.stopPropagation()}>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">{leftSelectedEvent.titulo}</h3>
-            <div className="bg-gray-100 p-4 rounded-lg mb-4 space-y-2 text-sm text-gray-700">
-              <p><strong>Responsable:</strong> {leftSelectedEvent.responsable}</p>
-              <p><strong>Espacio:</strong> {getSpaceDetails(leftSelectedEvent.espacioId)?.nombre}</p>
-              <p><strong>Fecha:</strong> {leftSelectedEvent.fecha}</p>
-              <p><strong>Asitencia esperada:</strong> {leftSelectedEvent.asistentes}</p>
-              <p><strong>Horario:</strong> {leftSelectedEvent.horaInicio} - {leftSelectedEvent.horaFin}</p>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex justify-center items-center z-50 p-4" onClick={() => setLeftSelectedEvent(null)}>
+          <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl border border-slate-100" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-slate-800 mb-1">{leftSelectedEvent.titulo}</h3>
+            <p className="text-xs text-slate-400 mb-4">Evaluación de solicitud de evento</p>
+
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/60 mb-5 space-y-2 text-xs text-slate-600">
+              <p><strong className="text-slate-800">Responsable:</strong> {leftSelectedEvent.responsable}</p>
+              <p><strong className="text-slate-800">Espacio:</strong> {getSpaceDetails(leftSelectedEvent.espacioId)?.nombre}</p>
+              <p><strong className="text-slate-800">Fecha:</strong> {leftSelectedEvent.fecha}</p>
+              <p><strong className="text-slate-800">Asistencia esperada:</strong> {leftSelectedEvent.asistentes} personas</p>
+              <p><strong className="text-slate-800">Horario:</strong> {leftSelectedEvent.horaInicio} - {leftSelectedEvent.horaFin}</p>
             </div>
             
-            <div className="flex gap-3 mt-5">
-              <button onClick={() => handleApprove(leftSelectedEvent)} className="flex-1 bg-green-600 text-white py-2.5 rounded-lg font-bold hover:bg-green-700 transition">✅ Aprobar</button>
-              <button onClick={() => handleReject(leftSelectedEvent)} className="flex-1 bg-red-600 text-white py-2.5 rounded-lg font-bold hover:bg-red-700 transition">❌ Rechazar</button>
-              <button onClick={() => setLeftSelectedEvent(null)} className="flex-1 bg-gray-300 text-gray-800 py-2.5 rounded-lg font-bold hover:bg-gray-400 transition">Volver</button>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => handleApprove(leftSelectedEvent)} 
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+              >
+                ✓ Aprobar
+              </button>
+              <button 
+                onClick={() => handleReject(leftSelectedEvent)} 
+                className="flex-1 bg-rose-600 hover:bg-rose-700 text-white py-2.5 rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+              >
+                ✕ Rechazar
+              </button>
+              <button 
+                onClick={() => setLeftSelectedEvent(null)} 
+                className="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+              >
+                Volver
+              </button>
             </div>
           </div>
         </div>
@@ -352,23 +392,21 @@ export default function Review() {
 
       {/* ======================= MODAL: GESTIÓN Y DETALLES (Derecha) ======================= */}
       {rightSelectedItem && (
-        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50" onClick={() => setRightSelectedItem(null)}>
-          <div className="bg-white p-6 rounded-xl w-[90%] max-w-[450px] shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex justify-center items-center z-50 p-4" onClick={() => setRightSelectedItem(null)}>
+          <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl border border-slate-100" onClick={e => e.stopPropagation()}>
             
-            <h3 className="text-xl font-bold text-gray-800 mb-3 border-b pb-2 text-center">
+            <h3 className="text-base font-bold text-slate-800 mb-4 pb-2 border-b border-slate-100">
               {rightTab === 'events' ? (isEditing ? '✏️ Editar Evento' : '📅 Detalle del Evento') : '🏢 Detalle del Espacio'}
             </h3>
 
-            {/* DETALLES O FORMULARIO DE EDICIÓN COMPACTO */}
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-5 text-sm text-gray-700">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/60 mb-5 text-xs text-slate-600">
               {rightTab === 'events' ? (
                 isEditing ? (
-                  /* --- FORMULARIO COMPACTO DE EDICIÓN --- */
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1">Espacio Asignado</label>
+                      <label className="block text-slate-700 font-medium mb-1">Espacio Asignado</label>
                       <select 
-                        className="w-full p-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:border-[#008b8b]"
+                        className="w-full p-2 border border-slate-300 rounded-lg bg-white text-xs focus:outline-none focus:border-cyan-500"
                         value={editEspacioId}
                         onChange={e => setEditEspacioId(e.target.value)}
                       >
@@ -379,49 +417,41 @@ export default function Review() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1">Fecha</label>
+                      <label className="block text-slate-700 font-medium mb-1">Fecha</label>
                       <input 
                         type="date" 
-                        className="w-full p-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:border-[#008b8b]"
+                        className="w-full p-2 border border-slate-300 rounded-lg bg-white text-xs focus:outline-none focus:border-cyan-500"
                         value={editFecha}
                         onChange={e => setEditFecha(e.target.value)}
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1">Asistencia Esperada</label>
+                      <label className="block text-slate-700 font-medium mb-1">Asistencia Esperada</label>
                       <input 
                         type="number" 
                         min="1"
-                        className="w-full p-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:border-[#008b8b]"
+                        className="w-full p-2 border border-slate-300 rounded-lg bg-white text-xs focus:outline-none focus:border-cyan-500"
                         value={editAsistentes}
-                        onChange={e => {
-                          const val = e.target.value;
-                          if (val === '') {
-                            setEditAsistentes('');
-                          } else {
-                            // Garantiza que no sea menor a 1
-                            setEditAsistentes(Math.max(1, Number(val)));
-                          }
-                        }}
+                        onChange={e => setEditAsistentes(e.target.value === '' ? '' : Math.max(1, Number(e.target.value)))}
                       />
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Hora Inicio</label>
+                        <label className="block text-slate-700 font-medium mb-1">Hora Inicio</label>
                         <input 
                           type="time" 
-                          className="w-full p-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:border-[#008b8b]"
+                          className="w-full p-2 border border-slate-300 rounded-lg bg-white text-xs focus:outline-none focus:border-cyan-500"
                           value={editHoraInicio}
                           onChange={e => setEditHoraInicio(e.target.value)}
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Hora Fin</label>
+                        <label className="block text-slate-700 font-medium mb-1">Hora Fin</label>
                         <input 
                           type="time" 
-                          className="w-full p-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:border-[#008b8b]"
+                          className="w-full p-2 border border-slate-300 rounded-lg bg-white text-xs focus:outline-none focus:border-cyan-500"
                           value={editHoraFin}
                           onChange={e => setEditHoraFin(e.target.value)}
                         />
@@ -429,26 +459,26 @@ export default function Review() {
                     </div>
                   </div>
                 ) : (
-                  /* --- VISTA NORMAL DE DETALLES --- */
                   <div className="space-y-2">
                     {(() => {
                       const ev = rightSelectedItem as Event;
                       const sp = getSpaceDetails(ev.espacioId);
                       return (
                         <>
-                          <p><strong className="text-gray-900">Título:</strong> {ev.titulo}</p>
-                          <p><strong className="text-gray-900">Responsable:</strong> {ev.responsable}</p>
-                          <p><strong className="text-gray-900">Espacio Asignado:</strong> {sp?.nombre || 'Desconocido'}</p>
-                          <p><strong className="text-gray-900">Fecha:</strong> {ev.fecha}</p>
-                          <p><strong className="text-gray-900">Asistencia esperada:</strong> {ev.asistentes}</p>
-                          <p><strong className="text-gray-900">Horario:</strong> {ev.horaInicio} - {ev.horaFin}</p>
+                          <p><strong className="text-slate-800">Título:</strong> {ev.titulo}</p>
+                          <p><strong className="text-slate-800">Responsable:</strong> {ev.responsable}</p>
+                          <p><strong className="text-slate-800">Espacio Asignado:</strong> {sp?.nombre || 'Desconocido'}</p>
+                          <p><strong className="text-slate-800">Fecha:</strong> {ev.fecha}</p>
+                          <p><strong className="text-slate-800">Asistencia esperada:</strong> {ev.asistentes}</p>
+                          <p><strong className="text-slate-800">Horario:</strong> {ev.horaInicio} - {ev.horaFin}</p>
                           <p className="flex items-center gap-2">
-                            <strong className="text-gray-900">Estado:</strong> 
-                            <span className={`text-[0.75rem] px-2 py-0.5 rounded-full text-white font-bold ${
-                              ev.estado === 'aprobado' ? 'bg-green-600' :
-                              ev.estado === 'rechazado' ? 'bg-red-600' :
-                              ev.estado === 'cancelado' ? 'bg-orange-500' : // 👈 Nuevo color para cancelado
-                              'bg-yellow-500' // 'solicitado'
+                            <strong className="text-slate-800">Estado:</strong> 
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                              ev.estado === 'aprobado' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                              ev.estado === 'realizado' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                              ev.estado === 'solicitado' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                              ev.estado === 'cancelado' ? 'bg-slate-100 text-slate-600 border-slate-200' :
+                              'bg-rose-50 text-rose-700 border-rose-200'
                             }`}>
                               {ev.estado.toUpperCase()}
                             </span>
@@ -459,17 +489,16 @@ export default function Review() {
                   </div>
                 )
               ) : (
-                /* --- VISTA ESPACIOS --- */
                 <div className="space-y-2">
                   {(() => {
                     const sp = rightSelectedItem as Spaces;
                     const totalEventos = events.filter(e => e.espacioId === sp.id).length;
                     return (
                       <>
-                        <p><strong className="text-gray-900">Nombre:</strong> {sp.nombre}</p>
-                        <p><strong className="text-gray-900">Tipo:</strong> <span className="capitalize">{sp.tipo}</span></p>
-                        <p><strong className="text-gray-900">Capacidad:</strong> {sp.capacidad} personas</p>
-                        <p><strong className="text-gray-900">Eventos Asociados:</strong> {totalEventos}</p>
+                        <p><strong className="text-slate-800">Nombre:</strong> {sp.nombre}</p>
+                        <p><strong className="text-slate-800">Tipo:</strong> <span className="capitalize">{sp.tipo}</span></p>
+                        <p><strong className="text-slate-800">Capacidad:</strong> {sp.capacidad} personas</p>
+                        <p><strong className="text-slate-800">Eventos Asociados:</strong> {totalEventos}</p>
                       </>
                     );
                   })()}
@@ -485,13 +514,13 @@ export default function Review() {
                     <div className="flex gap-2">
                       <button 
                         onClick={() => handleSaveEdit(rightSelectedItem as Event)} 
-                        className="flex-1 bg-green-600 text-white py-2 rounded-lg font-bold hover:bg-green-700 transition"
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
                       >
-                        💾 Guardar Cambios
+                        💾 Guardar
                       </button>
                       <button 
                         onClick={() => setIsEditing(false)} 
-                        className="flex-1 bg-gray-300 text-gray-800 py-2 rounded-lg font-bold hover:bg-gray-400 transition"
+                        className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
                       >
                         Cancelar
                       </button>
@@ -500,15 +529,15 @@ export default function Review() {
                     <>
                       <button 
                         onClick={() => setIsEditing(true)} 
-                        className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition"
+                        className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-2 rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
                       >
-                        ✏️ Editar Información Básica
+                        ✏️ Editar Información
                       </button>
 
                       {(rightSelectedItem as Event).estado !== 'rechazado' && (
                         <button 
                           onClick={() => handleCancelEvent(rightSelectedItem as Event)} 
-                          className="w-full bg-amber-600 text-white py-2 rounded-lg font-bold hover:bg-amber-700 transition"
+                          className="w-full bg-amber-600 hover:bg-amber-700 text-white py-2 rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
                         >
                           🚫 Cancelar Evento
                         </button>
@@ -522,13 +551,13 @@ export default function Review() {
                 <>
                   <button 
                     onClick={() => handleDeleteRightItem(rightSelectedItem)} 
-                    className="w-full bg-red-600 text-white py-2 rounded-lg font-bold hover:bg-red-700 transition"
+                    className="w-full bg-rose-600 hover:bg-rose-700 text-white py-2 rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
                   >
                     🗑️ Borrar Permanente
                   </button>
                   <button 
                     onClick={() => setRightSelectedItem(null)} 
-                    className="w-full bg-gray-200 text-gray-800 py-2 rounded-lg font-bold hover:bg-gray-300 transition mt-1"
+                    className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer mt-1"
                   >
                     Cerrar
                   </button>
@@ -540,15 +569,20 @@ export default function Review() {
         </div>
       )}
 
-      {/* ======================= MODAL DE ALERTA (Global) ======================= */}
+      {/* ======================= MODAL DE ALERTA Global ======================= */}
       {modalMessage && (
-        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[60]" onClick={() => setModalMessage(null)}>
-          <div className={`bg-white p-6 rounded-xl w-[90%] max-w-[400px] shadow-2xl text-center border-t-8 ${modalMessage.type === 'error' ? 'border-red-500' : 'border-green-500'}`} onClick={e => e.stopPropagation()}>
-            <h3 className={`text-xl font-bold mb-3 ${modalMessage.type === 'error' ? 'text-red-500' : 'text-green-500'}`}>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex justify-center items-center z-[60] p-4" onClick={() => setModalMessage(null)}>
+          <div className="bg-white p-6 rounded-2xl w-full max-w-sm shadow-2xl border-t-4 border-t-rose-500 text-center" onClick={e => e.stopPropagation()}>
+            <h3 className={`text-base font-bold mb-2 ${modalMessage.type === 'error' ? 'text-rose-600' : 'text-emerald-600'}`}>
               {modalMessage.type === 'error' ? '⚠️ Acción Denegada' : '✅ Éxito'}
             </h3>
-            <p className="text-gray-700">{modalMessage.text}</p>
-            <button onClick={() => setModalMessage(null)} className="mt-4 bg-gray-800 text-white px-6 py-2 rounded-lg font-bold hover:bg-gray-900">Entendido</button>
+            <p className="text-xs text-slate-600">{modalMessage.text}</p>
+            <button 
+              onClick={() => setModalMessage(null)} 
+              className="mt-5 w-full bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+            >
+              Entendido
+            </button>
           </div>
         </div>
       )}
