@@ -130,6 +130,8 @@ export default function Review() {
       return;
     }
 
+    
+
     // --- VALIDACIÓN DE CAPACIDAD DEL NUEVO ESPACIO ---
     const selectedSpace = spaces.find(s => s.id === editEspacioId);
     const numAsistentes = editAsistentes === '' ? (evento.asistentes || 0) : Number(editAsistentes);
@@ -393,7 +395,15 @@ export default function Review() {
                         min="1"
                         className="w-full p-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:border-[#008b8b]"
                         value={editAsistentes}
-                        onChange={e => setEditAsistentes(e.target.value === '' ? '' : Number(e.target.value))}
+                        onChange={e => {
+                          const val = e.target.value;
+                          if (val === '') {
+                            setEditAsistentes('');
+                          } else {
+                            // Garantiza que no sea menor a 1
+                            setEditAsistentes(Math.max(1, Number(val)));
+                          }
+                        }}
                       />
                     </div>
 
