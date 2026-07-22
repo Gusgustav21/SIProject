@@ -62,6 +62,7 @@ export default function Submit() {
       espacioId,
       responsable,
       fecha,
+      asistentes: Number(asistentes),
       horaInicio,
       horaFin,
       estado: 'solicitado' // Todo evento entra como solicitado por defecto

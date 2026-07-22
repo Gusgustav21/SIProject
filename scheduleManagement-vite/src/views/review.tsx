@@ -396,6 +396,7 @@ export default function Review() {
                           <p><strong className="text-gray-900">Responsable:</strong> {ev.responsable}</p>
                           <p><strong className="text-gray-900">Espacio Asignado:</strong> {sp?.nombre || 'Desconocido'}</p>
                           <p><strong className="text-gray-900">Fecha:</strong> {ev.fecha}</p>
+                          <p><strong className="text-gray-900">Asistencia esperada:</strong> {ev.asistentes}</p>
                           <p><strong className="text-gray-900">Horario:</strong> {ev.horaInicio} - {ev.horaFin}</p>
                           <p className="flex items-center gap-2">
                             <strong className="text-gray-900">Estado:</strong> 

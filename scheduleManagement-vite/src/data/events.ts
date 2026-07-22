@@ -4,6 +4,7 @@ export interface Event {
     espacioId: string; // Relacionado con el ID del espacio
     responsable: string;
     fecha: string;
+    asistentes: number;
     horaInicio: string;
     horaFin: string;
     estado: 'solicitado' | 'aprobado' | 'rechazado'| 'realizado'| 'cancelado' ;
@@ -16,6 +17,7 @@ export interface Event {
       espacioId: 'esp-1',
       responsable: 'Prof. Carlos Martínez',
       fecha: '2026-07-22',
+      asistentes: 10,
       horaInicio: '08:00',
       horaFin: '12:00',
       estado: 'aprobado'
@@ -26,6 +28,7 @@ export interface Event {
       espacioId: 'esp-2',
       responsable: 'Centro de Estudiantes',
       fecha: '2026-07-24',
+      asistentes: 10,
       horaInicio: '14:00',
       horaFin: '16:00',
       estado: 'solicitado'

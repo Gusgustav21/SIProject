@@ -84,7 +84,7 @@ export default function Dashboard() {
             <thead>
               <tr>
                 <th className="bg-white font-bold text-[#24292e] sticky top-0 z-10 border-b-2 border-[#e1e4e8] py-3.5 px-4 text-[0.95rem]">Evento</th>
-                <th className="bg-white font-bold text-[#24292e] sticky top-0 z-10 border-b-2 border-[#e1e4e8] py-3.5 px-4 text-[0.95rem]">Tipo</th>
+                <th className="bg-white font-bold text-[#24292e] sticky top-0 z-10 border-b-2 border-[#e1e4e8] py-3.5 px-4 text-[0.95rem]">Limite</th>
                 <th className="bg-white font-bold text-[#24292e] sticky top-0 z-10 border-b-2 border-[#e1e4e8] py-3.5 px-4 text-[0.95rem]">Responsable</th>
                 <th className="bg-white font-bold text-[#24292e] sticky top-0 z-10 border-b-2 border-[#e1e4e8] py-3.5 px-4 text-[0.95rem]">Espacio</th>
                 <th className="bg-white font-bold text-[#24292e] sticky top-0 z-10 border-b-2 border-[#e1e4e8] py-3.5 px-4 text-[0.95rem]">Fecha/Hora</th>
@@ -96,7 +96,7 @@ export default function Dashboard() {
               {events.map((evento) => (
                 <tr key={evento.id} className="hover:bg-[#f8f9fa] transition-colors">
                   <td className="py-3.5 px-4 border-b border-[#e1e4e8] text-[0.95rem]">{evento.titulo}</td>
-                  <td className="py-3.5 px-4 border-b border-[#e1e4e8] text-[0.95rem]">Actividad</td>
+                  <td className="py-3.5 px-4 border-b border-[#e1e4e8] text-[0.95rem]">{evento.asistentes}</td>
                   <td className="py-3.5 px-4 border-b border-[#e1e4e8] text-[0.95rem]">{evento.responsable}</td>
                   <td className="py-3.5 px-4 border-b border-[#e1e4e8] text-[0.95rem]">{getSpaceName(evento.espacioId)}</td>
                   <td className="py-3.5 px-4 border-b border-[#e1e4e8] text-[0.95rem]">{`${evento.fecha}, ${evento.horaInicio}-${evento.horaFin}`}</td>
