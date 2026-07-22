@@ -11,6 +11,7 @@ export default function Dashboard() {
   const solicitados = events.filter(e => e.estado === 'solicitado').length;
   const aprobados = events.filter(e => e.estado === 'aprobado').length;
   const rechazados = events.filter(e => e.estado === 'rechazado').length;
+  const cancelados = events.filter(e => e.estado === 'cancelado').length;
 
   // Función auxiliar para buscar el nombre del espacio usando su ID
   const getSpaceName = (espacioId: string) => {
@@ -25,23 +26,28 @@ export default function Dashboard() {
       <aside className="w-[260px] bg-[#2b3238] text-white p-[15px] rounded-lg flex flex-col gap-2.5 shrink-0 box-border">
         
         <div className="bg-transparent border border-[#454d55] flex flex-col items-start gap-2.5 p-[15px] rounded-[6px] text-[1.1rem]">
-          <h3 className="m-0 text-[1rem] text-[#a9b2b9] font-medium">Eventos Totales:</h3>
-          <p className="m-0 text-[2.5rem] font-bold text-white leading-none">{totalEvents}</p>
+          <h2 className="m-0 text-[1rem] text-[#a9b2b9] font-medium">Eventos Totales:</h2>
+          <p className="m-0 text-[2rem] font-bold text-white leading-none">{totalEvents}</p>
         </div>
 
-        <div className="p-[15px] rounded-[6px] flex justify-between items-center text-[1.1rem] bg-[#2b5773]">
+        <div className="p-[10px] rounded-[4px] flex justify-between items-center text-[1.1rem] bg-[#2b5773]">
           <span>Solicitados:</span>
           <strong>{solicitados}</strong>
         </div>
 
-        <div className="p-[15px] rounded-[6px] flex justify-between items-center text-[1.1rem] bg-[#3b6b4f]">
+        <div className="p-[10px] rounded-[4px] flex justify-between items-center text-[1.1rem] bg-[#3b6b4f]">
           <span>Aprobados:</span>
           <strong>{aprobados}</strong>
         </div>
 
-        <div className="p-[15px] rounded-[6px] flex justify-between items-center text-[1.1rem] bg-[#6a3a41]">
+        <div className="p-[10px] rounded-[4px] flex justify-between items-center text-[1.1rem] bg-[#6a3a41]">
           <span>Rechazados:</span>
           <strong>{rechazados}</strong>
+        </div>
+
+        <div className="p-[10px] rounded-[4px] flex justify-between items-center text-[1.1rem] bg-[#7e6b2d]">
+          <span>Cancelados:</span>
+          <strong>{cancelados}</strong>
         </div>
 
         {/* Gráfico TOTALMENTE REAL y Dinámico */}
@@ -95,15 +101,17 @@ export default function Dashboard() {
                   <td className="py-3.5 px-4 border-b border-[#e1e4e8] text-[0.95rem]">{getSpaceName(evento.espacioId)}</td>
                   <td className="py-3.5 px-4 border-b border-[#e1e4e8] text-[0.95rem]">{`${evento.fecha}, ${evento.horaInicio}-${evento.horaFin}`}</td>
                   <td className="py-3.5 px-4 border-b border-[#e1e4e8] text-[0.95rem]">
-                    <span className={`px-3 py-1 rounded-[20px] text-[0.85rem] font-medium inline-block ${
-                      evento.estado === 'aprobado' ? 'bg-[#d4edda] text-[#155724] border border-[#c3e6cb]' :
-                      evento.estado === 'solicitado' ? 'bg-[#fff3cd] text-[#856404] border border-[#ffeeba]' :
-                      'bg-[#f8d7da] text-[#721c24] border border-[#f5c6cb]'
-                    }`}>
-                      {evento.estado === 'solicitado' ? 'En Revisión' : 
-                       evento.estado === 'aprobado' ? 'Aprobado' : 'Rechazado'}
-                    </span>
-                  </td>
+                  <span className={`px-3 py-1 rounded-[20px] text-[0.85rem] font-medium inline-block ${
+                    evento.estado === 'aprobado' ? 'bg-[#d4edda] text-[#155724] border border-[#c3e6cb]' :
+                    evento.estado === 'solicitado' ? 'bg-[#fff3cd] text-[#856404] border border-[#ffeeba]' :
+                    evento.estado === 'cancelado' ? 'bg-gray-200 text-gray-700 border border-gray-300' :
+                    'bg-[#f8d7da] text-[#721c24] border border-[#f5c6cb]'
+                  }`}>
+                    {evento.estado === 'solicitado' ? 'En Revisión' : 
+                    evento.estado === 'aprobado' ? 'Aprobado' : 
+                    evento.estado === 'cancelado' ? 'Cancelado' : 'Rechazado'}
+                  </span>
+                </td>
                 </tr>
               ))}
             </tbody>
