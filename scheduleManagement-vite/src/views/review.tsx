@@ -22,6 +22,7 @@ export default function Review() {
   const [editFecha, setEditFecha] = useState('');
   const [editHoraInicio, setEditHoraInicio] = useState('');
   const [editHoraFin, setEditHoraFin] = useState('');
+  const [editAsistentes, setEditAsistentes] = useState<number | ''>('');
 
   // --- ESTADOS: Filtros y Ordenamiento (Columna Derecha) ---
   const [sortBy, setSortBy] = useState<'fecha' | 'tipo'>('fecha');
@@ -43,7 +44,9 @@ export default function Review() {
 
   // Revisa si un evento choca con cualquier otro (aprobado o en revisión) para pintarlo de rojo
   const hasAnyConflict = (targetEvent: Event) => {
-    return events.some(e => e.estado !== 'rechazado' && checkOverlap(targetEvent, e));
+    return events.some(
+      e => e.estado !== 'rechazado' && e.estado !== 'cancelado' && checkOverlap(targetEvent, e)
+    );
   };
 
   // --- DERIVACIÓN DE DATOS (Memorizada) ---
@@ -90,6 +93,7 @@ export default function Review() {
       setEditFecha(ev.fecha);
       setEditHoraInicio(ev.horaInicio);
       setEditHoraFin(ev.horaFin);
+      setEditAsistentes(ev.asistentes ?? '');
     }
   };
 
@@ -126,15 +130,28 @@ export default function Review() {
       return;
     }
 
+    // --- VALIDACIÓN DE CAPACIDAD DEL NUEVO ESPACIO ---
+    const selectedSpace = spaces.find(s => s.id === editEspacioId);
+    const numAsistentes = editAsistentes === '' ? (evento.asistentes || 0) : Number(editAsistentes);
+
+    if (selectedSpace && numAsistentes > selectedSpace.capacidad) {
+      setModalMessage({
+        type: 'error',
+        text: `¡Capacidad excedida! El espacio "${selectedSpace.nombre}" tiene capacidad para ${selectedSpace.capacidad} personas, pero la asistencia esperada es de ${numAsistentes}.`
+      });
+      return;
+    }
+
     const updatedTempEvent: Event = {
       ...evento,
       espacioId: editEspacioId,
       fecha: editFecha,
       horaInicio: editHoraInicio,
-      horaFin: editHoraFin
+      horaFin: editHoraFin,
+      asistentes: numAsistentes // 👈 Se agrega para la verificación temporal
     };
 
-    // Validar solapamiento con otros eventos APROBADOS (excluyendo el evento actual si ya estaba aprobado)
+    // Validar solapamiento con otros eventos APROBADOS
     const hasConflict = events.some(
       e => e.id !== evento.id && e.estado === 'aprobado' && checkOverlap(updatedTempEvent, e)
     );
@@ -147,11 +164,13 @@ export default function Review() {
       return;
     }
 
+    // Guardar cambios en el store de Zustand
     updateEvent(evento.id, {
       espacioId: editEspacioId,
       fecha: editFecha,
       horaInicio: editHoraInicio,
-      horaFin: editHoraFin
+      horaFin: editHoraFin,
+      asistentes: numAsistentes // 👈 ¡AQUÍ FALTABA ENVIARLO AL STORE!
     });
 
     setIsEditing(false);
@@ -292,7 +311,10 @@ export default function Review() {
                 <strong className="block text-gray-800">{isEvent ? evento!.titulo : espacio!.nombre}</strong>
                 {isEvent && (
                   <span className={`text-[0.7rem] px-2 py-0.5 rounded-full text-white ${
-                    evento!.estado === 'aprobado' ? 'bg-green-600' : evento!.estado === 'rechazado' ? 'bg-red-600' : 'bg-yellow-500'
+                    evento!.estado === 'aprobado' ? 'bg-green-600' :
+                    evento!.estado === 'rechazado' ? 'bg-red-600' :
+                    evento!.estado === 'cancelado' ? 'bg-orange-500' : // 👈 Nuevo color para cancelado
+                    'bg-yellow-500' // 'solicitado'
                   }`}>
                     {evento!.estado.toUpperCase()}
                   </span>
@@ -313,6 +335,7 @@ export default function Review() {
               <p><strong>Responsable:</strong> {leftSelectedEvent.responsable}</p>
               <p><strong>Espacio:</strong> {getSpaceDetails(leftSelectedEvent.espacioId)?.nombre}</p>
               <p><strong>Fecha:</strong> {leftSelectedEvent.fecha}</p>
+              <p><strong>Asitencia esperada:</strong> {leftSelectedEvent.asistentes}</p>
               <p><strong>Horario:</strong> {leftSelectedEvent.horaInicio} - {leftSelectedEvent.horaFin}</p>
             </div>
             
@@ -363,6 +386,17 @@ export default function Review() {
                       />
                     </div>
 
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">Asistencia Esperada</label>
+                      <input 
+                        type="number" 
+                        min="1"
+                        className="w-full p-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:border-[#008b8b]"
+                        value={editAsistentes}
+                        onChange={e => setEditAsistentes(e.target.value === '' ? '' : Number(e.target.value))}
+                      />
+                    </div>
+
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">Hora Inicio</label>
@@ -401,7 +435,10 @@ export default function Review() {
                           <p className="flex items-center gap-2">
                             <strong className="text-gray-900">Estado:</strong> 
                             <span className={`text-[0.75rem] px-2 py-0.5 rounded-full text-white font-bold ${
-                              ev.estado === 'aprobado' ? 'bg-green-600' : ev.estado === 'rechazado' ? 'bg-red-600' : 'bg-yellow-500'
+                              ev.estado === 'aprobado' ? 'bg-green-600' :
+                              ev.estado === 'rechazado' ? 'bg-red-600' :
+                              ev.estado === 'cancelado' ? 'bg-orange-500' : // 👈 Nuevo color para cancelado
+                              'bg-yellow-500' // 'solicitado'
                             }`}>
                               {ev.estado.toUpperCase()}
                             </span>
