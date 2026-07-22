@@ -91,9 +91,35 @@ export default function Review() {
     setLeftSelectedEvent(null);
   };
 
-  const handleDeleteRightItem = (id: string) => {
-    if (rightTab === 'events') deleteEvent(id);
-    else deleteSpace(id);
+  const handleDeleteRightItem = (item: Event | Spaces) => {
+    // Validar si es un espacio con eventos asociados
+    if (rightTab === 'spaces') {
+      const hasAssociatedEvents = events.some(e => e.espacioId === item.id);
+      if (hasAssociatedEvents) {
+        setModalMessage({
+          type: 'error',
+          text: `No se puede eliminar el espacio. Actualmente existen eventos asociados a este espacio.`
+        });
+        setRightSelectedItem(null);
+        return;
+      }
+    }
+
+    // Modal de confirmación nativo
+    const nombreItem = rightTab === 'events' ? (item as Event).titulo : (item as Spaces).nombre;
+    const confirmDelete = window.confirm(`¿Estás seguro de que deseas eliminar permanentemente "${nombreItem}"?`);
+
+    if (!confirmDelete) return;
+
+    // Proceder con la eliminación
+    if (rightTab === 'events') {
+      deleteEvent(item.id);
+      setModalMessage({ type: 'success', text: 'Evento eliminado correctamente.' });
+    } else {
+      deleteSpace(item.id);
+      setModalMessage({ type: 'success', text: 'Espacio eliminado correctamente.' });
+    }
+
     setRightSelectedItem(null);
   };
 
@@ -231,18 +257,67 @@ export default function Review() {
         </div>
       )}
 
-      {/* ======================= MODAL: GESTIÓN (Derecha) ======================= */}
+      {/* ======================= MODAL: GESTIÓN Y DETALLES (Derecha) ======================= */}
       {rightSelectedItem && (
         <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50" onClick={() => setRightSelectedItem(null)}>
-          <div className="bg-white p-6 rounded-xl w-[90%] max-w-[400px] shadow-2xl text-center" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-gray-800 mb-4">
-              Opciones para {rightTab === 'events' ? (rightSelectedItem as Event).titulo : (rightSelectedItem as Spaces).nombre}
+          <div className="bg-white p-6 rounded-xl w-[90%] max-w-[450px] shadow-2xl" onClick={e => e.stopPropagation()}>
+            
+            <h3 className="text-xl font-bold text-gray-800 mb-3 border-b pb-2 text-center">
+              {rightTab === 'events' ? '📅 Detalle del Evento' : '🏢 Detalle del Espacio'}
             </h3>
-            <div className="flex flex-col gap-2">
-              <button className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700">✏️ Editar (Próximamente)</button>
-              <button onClick={() => handleDeleteRightItem(rightSelectedItem.id)} className="w-full bg-red-600 text-white py-2 rounded-lg font-bold hover:bg-red-700">🗑️ Borrar Permanente</button>
-              <button onClick={() => setRightSelectedItem(null)} className="w-full bg-gray-200 text-gray-800 py-2 rounded-lg font-bold hover:bg-gray-300 mt-2">Cancelar</button>
+
+            {/* DETALLES COMPLETOS DEL ELEMENTO SELECCIONADO */}
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-5 text-sm text-gray-700 space-y-2">
+              {rightTab === 'events' ? (() => {
+                const ev = rightSelectedItem as Event;
+                const sp = getSpaceDetails(ev.espacioId);
+                return (
+                  <>
+                    <p><strong className="text-gray-900">Título:</strong> {ev.titulo}</p>
+                    <p><strong className="text-gray-900">Responsable:</strong> {ev.responsable}</p>
+                    <p><strong className="text-gray-900">Espacio Asignado:</strong> {sp?.nombre || 'Desconocido'}</p>
+                    <p><strong className="text-gray-900">Fecha:</strong> {ev.fecha}</p>
+                    <p><strong className="text-gray-900">Horario:</strong> {ev.horaInicio} - {ev.horaFin}</p>
+                    <p className="flex items-center gap-2">
+                      <strong className="text-gray-900">Estado:</strong> 
+                      <span className={`text-[0.75rem] px-2 py-0.5 rounded-full text-white font-bold ${
+                        ev.estado === 'aprobado' ? 'bg-green-600' : ev.estado === 'rechazado' ? 'bg-red-600' : 'bg-yellow-500'
+                      }`}>
+                        {ev.estado.toUpperCase()}
+                      </span>
+                    </p>
+                  </>
+                );
+              })() : (() => {
+                const sp = rightSelectedItem as Spaces;
+                const totalEventos = events.filter(e => e.espacioId === sp.id).length;
+                return (
+                  <>
+                    <p><strong className="text-gray-900">Nombre:</strong> {sp.nombre}</p>
+                    <p><strong className="text-gray-900">Tipo:</strong> <span className="capitalize">{sp.tipo}</span></p>
+                    <p><strong className="text-gray-900">Capacidad:</strong> {sp.capacidad} personas</p>
+                    <p><strong className="text-gray-900">Eventos Asociados:</strong> {totalEventos}</p>
+                  </>
+                );
+              })()}
             </div>
+
+            {/* BOTONES DE ACCIÓN */}
+            <div className="flex flex-col gap-2">
+              <button 
+                onClick={() => handleDeleteRightItem(rightSelectedItem)} 
+                className="w-full bg-red-600 text-white py-2 rounded-lg font-bold hover:bg-red-700 transition"
+              >
+                🗑️ Borrar Permanente
+              </button>
+              <button 
+                onClick={() => setRightSelectedItem(null)} 
+                className="w-full bg-gray-200 text-gray-800 py-2 rounded-lg font-bold hover:bg-gray-300 transition mt-1"
+              >
+                Cancelar
+              </button>
+            </div>
+
           </div>
         </div>
       )}
