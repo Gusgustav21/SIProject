@@ -10,6 +10,8 @@ interface PersistedSpaceState {
 interface SpaceState extends PersistedSpaceState {
   // Acciones sincrónicas locales
   addSpace: (newSpace: Spaces) => void;
+  updateSpace: (id: string, updatedFields: Partial<Spaces>) => void; // 👈 AGREGAR
+  deleteSpace: (id: string) => void; // 👈 AGREGAR
   setSpaces: (spaces: Spaces[]) => void;
   resetSpaces: () => void;
 }
@@ -22,6 +24,20 @@ export const useSpaceStore = create<SpaceState>()(
       addSpace: (newSpace) =>
         set((state) => ({
           spaces: [...state.spaces, newSpace],
+        })),
+
+      // 👈 IMPLEMENTAR updateSpace
+      updateSpace: (id, updatedFields) =>
+        set((state) => ({
+          spaces: state.spaces.map((sp) =>
+            sp.id === id ? { ...sp, ...updatedFields } : sp
+          ),
+        })),
+
+      // 👈 IMPLEMENTAR deleteSpace
+      deleteSpace: (id) =>
+        set((state) => ({
+          spaces: state.spaces.filter((sp) => sp.id !== id),
         })),
 
       setSpaces: (spaces) => set({ spaces }),

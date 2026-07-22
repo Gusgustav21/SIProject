@@ -6,7 +6,7 @@ export interface Event {
     fecha: string;
     horaInicio: string;
     horaFin: string;
-    estado: 'solicitado' | 'aprobado' | 'cancelado';
+    estado: 'solicitado' | 'aprobado' | 'rechazado' ;
   }
 
   export const EVENTOS_INICIALES: Event[] = [

@@ -11,6 +11,8 @@ interface EventState extends PersistedEventState {
   // Acciones sincrónicas locales
   addEvent: (newEvent: Event) => void;
   updateEventStatus: (id: string, estado: Event['estado']) => void;
+  updateEvent: (id: string, updatedFields: Partial<Event>) => void; // 👈 AGREGAR
+  deleteEvent: (id: string) => void; // 👈 AGREGAR
   setEvents: (events: Event[]) => void;
   resetEvents: () => void;
 
@@ -35,6 +37,20 @@ export const useEventStore = create<EventState>()(
           events: state.events.map((evt) =>
             evt.id === id ? { ...evt, estado } : evt
           ),
+        })),
+
+        // 👈 IMPLEMENTAR updateEvent
+      updateEvent: (id, updatedFields) =>
+        set((state) => ({
+          events: state.events.map((evt) =>
+            evt.id === id ? { ...evt, ...updatedFields } : evt
+          ),
+        })),
+
+      // 👈 IMPLEMENTAR deleteEvent
+      deleteEvent: (id) =>
+        set((state) => ({
+          events: state.events.filter((evt) => evt.id !== id),
         })),
 
       setEvents: (events) => set({ events }),

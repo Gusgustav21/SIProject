@@ -10,7 +10,7 @@ export default function Dashboard() {
   const totalEvents = events.length;
   const solicitados = events.filter(e => e.estado === 'solicitado').length;
   const aprobados = events.filter(e => e.estado === 'aprobado').length;
-  const cancelados = events.filter(e => e.estado === 'cancelado').length;
+  const rechazados = events.filter(e => e.estado === 'rechazado').length;
 
   // Función auxiliar para buscar el nombre del espacio usando su ID
   const getSpaceName = (espacioId: string) => {
@@ -40,8 +40,8 @@ export default function Dashboard() {
         </div>
 
         <div className="p-[15px] rounded-[6px] flex justify-between items-center text-[1.1rem] bg-[#6a3a41]">
-          <span>Cancelados:</span>
-          <strong>{cancelados}</strong>
+          <span>Rechazados:</span>
+          <strong>{rechazados}</strong>
         </div>
 
         {/* Gráfico TOTALMENTE REAL y Dinámico */}
@@ -101,7 +101,7 @@ export default function Dashboard() {
                       'bg-[#f8d7da] text-[#721c24] border border-[#f5c6cb]'
                     }`}>
                       {evento.estado === 'solicitado' ? 'En Revisión' : 
-                       evento.estado === 'aprobado' ? 'Aprobado' : 'Cancelado'}
+                       evento.estado === 'aprobado' ? 'Aprobado' : 'Rechazado'}
                     </span>
                   </td>
                 </tr>
