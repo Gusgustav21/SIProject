@@ -536,30 +536,32 @@ export default function Review() {
                     <div className="flex gap-2">
                       <button 
                         onClick={() => handleSaveEdit(rightSelectedItem as Event)} 
-                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+                        className="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-[0.98] cursor-pointer"
                       >
-                        💾 Guardar
+                        💾 Guardar Cambios
                       </button>
                       <button 
                         onClick={() => setIsEditing(false)} 
-                        className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                        className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer"
                       >
                         Cancelar
                       </button>
                     </div>
                   ) : (
                     <>
+                      {/* Botón Principal: Editar */}
                       <button 
                         onClick={() => setIsEditing(true)} 
-                        className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-2 rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+                        className="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5"
                       >
                         ✏️ Editar Información
                       </button>
 
-                      {(rightSelectedItem as Event).estado !== 'rechazado' && (
+                      {/* Botón Secundario/Peligro Moderado: Cancelar Evento */}
+                      {(rightSelectedItem as Event).estado !== 'rechazado' && (rightSelectedItem as Event).estado !== 'cancelado' && (
                         <button 
                           onClick={() => handleCancelEvent(rightSelectedItem as Event)} 
-                          className="w-full bg-amber-600 hover:bg-amber-700 text-white py-2 rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+                          className="w-full bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5"
                         >
                           🚫 Cancelar Evento
                         </button>
@@ -571,15 +573,18 @@ export default function Review() {
 
               {!isEditing && (
                 <>
+                  {/* Acción Crítica: Borrar */}
                   <button 
                     onClick={() => handleDeleteRightItem(rightSelectedItem)} 
-                    className="w-full bg-rose-600 hover:bg-rose-700 text-white py-2 rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
+                    className="w-full bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    🗑️ Borrar Permanente
+                    🗑️ Borrar Permanentemente
                   </button>
+
+                  {/* Botón Neutro: Cerrar */}
                   <button 
                     onClick={() => setRightSelectedItem(null)} 
-                    className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer mt-1"
+                    className="w-full bg-transparent hover:bg-slate-100 text-slate-500 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer"
                   >
                     Cerrar
                   </button>
