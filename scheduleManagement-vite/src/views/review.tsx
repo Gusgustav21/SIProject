@@ -53,7 +53,7 @@ export default function Review() {
     if (rightTab === 'events') {
       let list = [...events];
 
-      list = list.filter(e => e.estado !== 'solicitado'); //No muestra eventos solicitados
+      list = list.filter(e => e.estado !== 'solicitado'); //No muestra eventos solicitados!
 
       if (filterType !== 'all') {
         list = list.filter(e => {
