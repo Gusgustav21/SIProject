@@ -23,8 +23,8 @@ export default function Review() {
   const [editHoraFin, setEditHoraFin] = useState('');
   const [editAsistentes, setEditAsistentes] = useState<number | ''>('');
 
-  // --- ESTADOS: Filtros y Ordenamiento ---
-  const [sortBy, setSortBy] = useState<'fecha' | 'tipo'>('fecha');
+  // --- ESTADOS: Filtros y Ordenamiento (CAMBIO 1: Se añade 'estado') ---
+  const [sortBy, setSortBy] = useState<'fecha' | 'tipo' | 'estado'>('fecha');
   const [filterType, setFilterType] = useState<string>('all');
 
   // --- LÓGICA DE NEGOCIO: Conflictos ---
@@ -52,15 +52,30 @@ export default function Review() {
   const rightListFiltered = useMemo(() => {
     if (rightTab === 'events') {
       let list = [...events];
+
+      list = list.filter(e => e.estado !== 'solicitado'); //No muestra eventos solicitados
+
       if (filterType !== 'all') {
         list = list.filter(e => {
           const sp = spaces.find(s => s.id === e.espacioId);
           return sp?.tipo === filterType;
         });
       }
+      
+      // CAMBIO 2: Lógica de ordenamiento para eventos
       if (sortBy === 'fecha') {
         list.sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+      } else if (sortBy === 'estado') {
+        const orderPriority: Record<string, number> = {
+          solicitado: 1,
+          aprobado: 2,
+          realizado: 3,
+          cancelado: 4,
+          rechazado: 5,
+        };
+        list.sort((a, b) => (orderPriority[a.estado] || 99) - (orderPriority[b.estado] || 99));
       }
+
       return list;
     } else {
       let list = [...spaces];
@@ -297,13 +312,20 @@ export default function Review() {
             <option value="auditorio">Auditorio</option>
           </select>
 
+          {/* CAMBIO 3: Opciones de ordenamiento en el select */}
           <select 
             className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-xl p-2.5 flex-1 focus:outline-none focus:border-cyan-500" 
             value={sortBy} 
             onChange={e => setSortBy(e.target.value as any)}
           >
-            <option value="fecha">Ordenar por Fecha</option>
-            <option value="tipo">Ordenar por Tipo</option>
+            {rightTab === 'events' ? (
+              <>
+                <option value="fecha">Ordenar por Fecha</option>
+                <option value="estado">Ordenar por Estado</option>
+              </>
+            ) : (
+              <option value="tipo">Ordenar por Tipo</option>
+            )}
           </select>
         </div>
 
