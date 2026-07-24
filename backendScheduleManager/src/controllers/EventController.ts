@@ -60,6 +60,16 @@ export class EventController {
                 return res.status(403).json({ error: "No tienes permiso para modificar este evento" })
             }
 
+            if (
+                req.event.estado === eventStatus.REALIZADO ||
+                req.event.estado === eventStatus.CANCELADO ||
+                req.event.estado === eventStatus.RECHAZADO
+            ) {
+                return res.status(400).json({
+                    error: `No se puede editar un evento en estado "${req.event.estado}"`,
+                })
+            }
+
             const { titulo, espacioId, responsable, fecha, horaInicio, horaFin, asistentes } = req.body
 
             if (espacioId) {
@@ -77,7 +87,6 @@ export class EventController {
             req.event.horaFin = horaFin || req.event.horaFin
             req.event.asistentes = asistentes !== undefined ? asistentes : req.event.asistentes
 
-            // "luego de aprobados si se modifican deben ser aprobados de nuevo (o sea pasa a estar en revisión)"
             // If it was already approved, modification resets it to review (solicitado).
             if (req.event.estado === eventStatus.APROBADO) {
                 req.event.estado = eventStatus.SOLICITADO

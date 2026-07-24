@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
-import { useEventStore } from '../stores/useEventStore';
-import { useSpaceStore } from '../stores/useSpaceStore';
+import { useEventsQuery, useSpacesQuery } from '../hooks/useScheduleQueries';
 
 const statePriority: Record<string, number> = {
   solicitado: 1,
@@ -11,9 +10,9 @@ const statePriority: Record<string, number> = {
 };
 
 export default function Dashboard() {
-  const events = useEventStore((state) => state.events);
-  const spaces = useSpaceStore((state) => state.spaces);
-  
+  const { data: events = [], isLoading: loadingEvents, isError: errorEvents } = useEventsQuery();
+  const { data: spaces = [], isLoading: loadingSpaces } = useSpacesQuery();
+
   // Métricas
   const totalEvents = events.length;
   const solicitados = events.filter(e => e.estado === 'solicitado').length;
@@ -36,11 +35,19 @@ export default function Dashboard() {
     });
   }, [events]);
 
+  if (loadingEvents || loadingSpaces) {
+    return <p className="text-sm text-slate-500">Cargando dashboard…</p>;
+  }
+
+  if (errorEvents) {
+    return <p className="text-sm text-rose-600">No se pudieron cargar los eventos.</p>;
+  }
+
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-110px)] w-full overflow-hidden">
       
       {/* ======================= PANEL IZQUIERDO ======================= */}
-      <aside className="w-full lg:w-[260px] bg-slate-900 text-slate-100 p-4 rounded-2xl shadow-lg flex flex-col gap-3 shrink-0 justify-between">
+      <aside className="w-full lg:w-65 bg-slate-900 text-slate-100 p-4 rounded-2xl shadow-lg flex flex-col gap-3 shrink-0 justify-between">
         
         {/* Total Metric */}
         <div className="bg-slate-800/50 border border-slate-700/80 flex items-center justify-between p-3.5 rounded-xl">
@@ -85,7 +92,7 @@ export default function Dashboard() {
             <h4 className="m-0 text-xs font-semibold text-slate-200">Uso de Espacios</h4>
             <span className="text-[10px] text-slate-400">(Aula)</span>
           </div>
-          <div className="flex items-end justify-between h-[70px] border-b border-l border-slate-600 p-1 pb-0">
+          <div className="flex items-end justify-between h-17.5 border-b border-l border-slate-600 p-1 pb-0">
             {spaces.slice(0, 8).map(space => {
               const conteoEventos = events.filter(e => e.espacioId === space.id).length;
               const porcentajeAltura = Math.min((conteoEventos / 10) * 100, 100);
@@ -125,11 +132,11 @@ export default function Dashboard() {
             <tbody className="divide-y divide-slate-100">
               {sortedEvents.map((evento) => (
                 <tr key={evento.id} className="hover:bg-slate-50/80 transition-colors group">
-                  <td className="py-2.5 px-4 text-slate-800 font-semibold max-w-[180px] ">{evento.titulo}</td>
+                  <td className="py-2.5 px-4 text-slate-800 font-semibold max-w-45 ">{evento.titulo}</td>
                   <td className="py-2.5 px-4 text-slate-500 font-medium">{evento.asistentes}</td>
-                  <td className="py-2.5 px-4 text-slate-600  max-w-[130px]">{evento.responsable}</td>
+                  <td className="py-2.5 px-4 text-slate-600  max-w-32.5">{evento.responsable}</td>
                   <td className="py-2.5 px-4 text-slate-600">
-                    <span className="bg-slate-100 px-2 py-0.5 rounded-md text-[11px] font-medium text-slate-600 inline-block max-w-[120px]">
+                    <span className="bg-slate-100 px-2 py-0.5 rounded-md text-[11px] font-medium text-slate-600 inline-block max-w-30">
                       {getSpaceName(evento.espacioId)}
                     </span>
                   </td>

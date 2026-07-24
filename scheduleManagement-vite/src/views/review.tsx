@@ -1,13 +1,23 @@
 import { useState, useMemo } from 'react';
-import { useEventStore } from '../stores/useEventStore';
-import { useSpaceStore } from '../stores/useSpaceStore';
+import {
+  useEventsQuery,
+  useSpacesQuery,
+  useUpdateEvent,
+  usePatchEventStatus,
+  useDeleteEvent,
+  useDeleteSpace,
+} from '../hooks/useScheduleQueries';
 import type { Event } from '../data/events';
 import type { Spaces } from '../data/spaces';
+import { ApiError } from '../lib/api';
 
 export default function Review() {
-  // --- STORES DE ZUSTAND ---
-  const { events, updateEvent, deleteEvent } = useEventStore();
-  const { spaces, updateSpace, deleteSpace } = useSpaceStore();
+  const { data: events = [], isLoading: loadingEvents } = useEventsQuery();
+  const { data: spaces = [], isLoading: loadingSpaces } = useSpacesQuery();
+  const updateEventMutation = useUpdateEvent();
+  const patchStatus = usePatchEventStatus();
+  const deleteEventMutation = useDeleteEvent();
+  const deleteSpaceMutation = useDeleteSpace();
 
   // --- ESTADOS: Interfaz y Modales ---
   const [leftSelectedEvent, setLeftSelectedEvent] = useState<Event | null>(null);
@@ -104,7 +114,7 @@ export default function Review() {
     }
   };
 
-  const handleApprove = (evento: Event) => {
+  const handleApprove = async (evento: Event) => {
     if (hasConflictWithApproved(evento)) {
       setModalMessage({
         type: 'error',
@@ -112,23 +122,38 @@ export default function Review() {
       });
       return;
     }
-    updateEvent(evento.id, { estado: 'aprobado' });
-    setLeftSelectedEvent(null);
-    setModalMessage({ type: 'success', text: 'Evento aprobado con éxito.' });
+    try {
+      await patchStatus.mutateAsync({ id: evento.id, estado: 'aprobado' });
+      setLeftSelectedEvent(null);
+      setModalMessage({ type: 'success', text: 'Evento aprobado con éxito.' });
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'No se pudo aprobar el evento';
+      setModalMessage({ type: 'error', text: message });
+    }
   };
 
-  const handleReject = (evento: Event) => {
-    updateEvent(evento.id, { estado: 'rechazado' });
-    setLeftSelectedEvent(null);
+  const handleReject = async (evento: Event) => {
+    try {
+      await patchStatus.mutateAsync({ id: evento.id, estado: 'rechazado' });
+      setLeftSelectedEvent(null);
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'No se pudo rechazar el evento';
+      setModalMessage({ type: 'error', text: message });
+    }
   };
 
-  const handleCancelEvent = (evento: Event) => {
-    updateEvent(evento.id, { estado: 'cancelado' });
-    setRightSelectedItem(null);
-    setModalMessage({ type: 'success', text: 'El evento ha sido marcado como cancelado.' });
+  const handleCancelEvent = async (evento: Event) => {
+    try {
+      await patchStatus.mutateAsync({ id: evento.id, estado: 'cancelado' });
+      setRightSelectedItem(null);
+      setModalMessage({ type: 'success', text: 'El evento ha sido marcado como cancelado.' });
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'No se pudo cancelar el evento';
+      setModalMessage({ type: 'error', text: message });
+    }
   };
 
-  const handleSaveEdit = (evento: Event) => {
+  const handleSaveEdit = async (evento: Event) => {
     if (editHoraInicio >= editHoraFin) {
       setModalMessage({
         type: 'error',
@@ -169,20 +194,27 @@ export default function Review() {
       return;
     }
 
-    updateEvent(evento.id, {
-      espacioId: editEspacioId,
-      fecha: editFecha,
-      horaInicio: editHoraInicio,
-      horaFin: editHoraFin,
-      asistentes: numAsistentes
-    });
-
-    setIsEditing(false);
-    setRightSelectedItem(null);
-    setModalMessage({ type: 'success', text: 'Información del evento actualizada correctamente.' });
+    try {
+      await updateEventMutation.mutateAsync({
+        id: evento.id,
+        payload: {
+          espacioId: editEspacioId,
+          fecha: editFecha,
+          horaInicio: editHoraInicio,
+          horaFin: editHoraFin,
+          asistentes: numAsistentes,
+        },
+      });
+      setIsEditing(false);
+      setRightSelectedItem(null);
+      setModalMessage({ type: 'success', text: 'Información del evento actualizada correctamente.' });
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'No se pudo actualizar el evento';
+      setModalMessage({ type: 'error', text: message });
+    }
   };
 
-  const handleDeleteRightItem = (item: Event | Spaces) => {
+  const handleDeleteRightItem = async (item: Event | Spaces) => {
     if (rightTab === 'spaces') {
       const hasAssociatedEvents = events.some(e => e.espacioId === item.id);
       if (hasAssociatedEvents) {
@@ -200,16 +232,24 @@ export default function Review() {
 
     if (!confirmDelete) return;
 
-    if (rightTab === 'events') {
-      deleteEvent(item.id);
-      setModalMessage({ type: 'success', text: 'Evento eliminado correctamente.' });
-    } else {
-      deleteSpace(item.id);
-      setModalMessage({ type: 'success', text: 'Espacio eliminado correctamente.' });
+    try {
+      if (rightTab === 'events') {
+        await deleteEventMutation.mutateAsync(item.id);
+        setModalMessage({ type: 'success', text: 'Evento eliminado correctamente.' });
+      } else {
+        await deleteSpaceMutation.mutateAsync(item.id);
+        setModalMessage({ type: 'success', text: 'Espacio eliminado correctamente.' });
+      }
+      setRightSelectedItem(null);
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'No se pudo eliminar';
+      setModalMessage({ type: 'error', text: message });
     }
-
-    setRightSelectedItem(null);
   };
+
+  if (loadingEvents || loadingSpaces) {
+    return <p className="text-sm text-slate-500">Cargando revisión…</p>;
+  }
 
   const getSpaceDetails = (id: string) => spaces.find(s => s.id === id);
   
@@ -551,20 +591,41 @@ export default function Review() {
                   ) : (
                     <>
                       {/* Botón Principal: Editar */}
-                      <button 
-                        onClick={() => setIsEditing(true)} 
-                        className="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5"
-                      >
-                        ✏️ Editar Información
-                      </button>
+                      {(rightSelectedItem as Event).estado !== 'rechazado' &&
+                        (rightSelectedItem as Event).estado !== 'cancelado' &&
+                        (rightSelectedItem as Event).estado !== 'realizado' && (
+                        <button 
+                          onClick={() => setIsEditing(true)} 
+                          className="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          ✏️ Editar Información
+                        </button>
+                      )}
 
                       {/* Botón Secundario/Peligro Moderado: Cancelar Evento */}
-                      {(rightSelectedItem as Event).estado !== 'rechazado' && (rightSelectedItem as Event).estado !== 'cancelado' && (
+                      {(rightSelectedItem as Event).estado !== 'rechazado' && (rightSelectedItem as Event).estado !== 'cancelado' && (rightSelectedItem as Event).estado !== 'realizado' && (
                         <button 
                           onClick={() => handleCancelEvent(rightSelectedItem as Event)} 
                           className="w-full bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5"
                         >
                           🚫 Cancelar Evento
+                        </button>
+                      )}
+                      {(rightSelectedItem as Event).estado === 'aprobado' && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              await patchStatus.mutateAsync({ id: (rightSelectedItem as Event).id, estado: 'realizado' })
+                              setRightSelectedItem(null)
+                              setModalMessage({ type: 'success', text: 'Evento marcado como realizado.' })
+                            } catch (err) {
+                              const message = err instanceof ApiError ? err.message : 'No se pudo actualizar el estado'
+                              setModalMessage({ type: 'error', text: message })
+                            }
+                          }}
+                          className="w-full bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200/80 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+                        >
+                          ✓ Marcar como Realizado
                         </button>
                       )}
                     </>
@@ -599,7 +660,7 @@ export default function Review() {
 
       {/* ======================= MODAL DE ALERTA Global ======================= */}
       {modalMessage && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex justify-center items-center z-[60] p-4" onClick={() => setModalMessage(null)}>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex justify-center items-center z-60 p-4" onClick={() => setModalMessage(null)}>
           <div className="bg-white p-6 rounded-2xl w-full max-w-sm shadow-2xl border-t-4 border-t-rose-500 text-center" onClick={e => e.stopPropagation()}>
             <h3 className={`text-base font-bold mb-2 ${modalMessage.type === 'error' ? 'text-rose-600' : 'text-emerald-600'}`}>
               {modalMessage.type === 'error' ? '⚠️ Acción Denegada' : '✅ Éxito'}

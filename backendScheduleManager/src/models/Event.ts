@@ -6,6 +6,8 @@ export const eventStatus = {
     SOLICITADO: "solicitado",
     APROBADO: "aprobado",
     RECHAZADO: "rechazado",
+    REALIZADO: "realizado",
+    CANCELADO: "cancelado",
 } as const
 
 export type EventStatus = typeof eventStatus[keyof typeof eventStatus]

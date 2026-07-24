@@ -1,11 +1,10 @@
 import { useState, useMemo } from 'react';
-import { useEventStore } from '../stores/useEventStore';
-import { useSpaceStore } from '../stores/useSpaceStore';
+import { useEventsQuery, useSpacesQuery } from '../hooks/useScheduleQueries';
 import type { Event } from '../data/events';
 
 export default function Calendar() {
-  const { events } = useEventStore();
-  const { spaces } = useSpaceStore();
+  const { data: events = [], isLoading: loadingEvents } = useEventsQuery();
+  const { data: spaces = [], isLoading: loadingSpaces } = useSpacesQuery();
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -36,6 +35,10 @@ export default function Calendar() {
   // --- LÓGICA DEL CALENDARIO ---
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
+
+  if (loadingEvents || loadingSpaces) {
+    return <p className="text-sm text-slate-500">Cargando calendario…</p>;
+  }
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = new Date(year, month, 1).getDay();
@@ -74,7 +77,7 @@ export default function Calendar() {
     <div className="flex flex-col lg:flex-row gap-5 h-full max-h-[calc(100vh-120px)] overflow-hidden">
 
       {/* ======================= COLUMNA IZQUIERDA: AGENDA ======================= */}
-      <aside className="w-full lg:w-[300px] xl:w-[340px] bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-y-auto">
+      <aside className="w-full lg:w-75 xl:w-85 bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-y-auto">
         <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-slate-100 shrink-0">
           <span className="text-lg">📌</span>
           <h2 className="m-0 text-slate-800 text-base font-bold">Próximas Actividades</h2>

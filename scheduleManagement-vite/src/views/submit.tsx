@@ -1,13 +1,17 @@
 import { useState } from 'react';
-import type { Event } from '../data/events';
-import type { Spaces } from '../data/spaces';
-import { useEventStore } from '../stores/useEventStore';
-import { useSpaceStore } from '../stores/useSpaceStore';
+import { useAuthStore } from '../stores/useAuthStore';
+import {
+  useSpacesQuery,
+  useCreateEvent,
+  useCreateSpace,
+} from '../hooks/useScheduleQueries';
+import { ApiError } from '../lib/api';
 
 export default function Submit() {
-  const addEvent = useEventStore((state) => state.addEvent);
-  const spaces = useSpaceStore((state) => state.spaces);
-  const addSpace = useSpaceStore((state) => state.addSpace);
+  const isAdmin = useAuthStore((s) => s.user?.role === 'admin');
+  const { data: spaces = [], isLoading: loadingSpaces } = useSpacesQuery();
+  const createEvent = useCreateEvent();
+  const createSpace = useCreateSpace();
 
   const [mode, setMode] = useState<'evento' | 'espacio'>('evento');
   const [modalMessage, setModalMessage] = useState<{ type: 'error' | 'success', text: string } | null>(null);
@@ -27,7 +31,7 @@ export default function Submit() {
   const [tipo, setTipo] = useState<'laboratorio' | 'salon' | 'auditorio'>('salon');
   const [ubicacion, setUbicacion] = useState('');
 
-  const handleRegistrarEvento = (e: React.FormEvent) => {
+  const handleRegistrarEvento = async (e: React.FormEvent) => {
     e.preventDefault();
     const espacioSeleccionado = spaces.find(s => s.id === espacioId);
 
@@ -50,45 +54,55 @@ export default function Submit() {
       return;
     }
 
-    const nuevoEvento: Event = {
-      id: `evt-${Date.now()}`,
-      titulo,
-      espacioId,
-      responsable,
-      fecha,
-      asistentes: Number(asistentes),
-      horaInicio,
-      horaFin,
-      estado: 'solicitado'
-    };
-
-    addEvent(nuevoEvento);
-    setModalMessage({ type: 'success', text: 'Evento registrado con éxito. Se encuentra "En Revisión".' });
-    
-    setTitulo(''); setEspacioId(''); setResponsable(''); setAsistentes(''); setFecha(''); setHoraInicio(''); setHoraFin('');
+    try {
+      await createEvent.mutateAsync({
+        titulo,
+        espacioId,
+        responsable,
+        fecha,
+        asistentes: Number(asistentes),
+        horaInicio,
+        horaFin,
+      });
+      setModalMessage({ type: 'success', text: 'Evento registrado con éxito. Se encuentra "En Revisión".' });
+      setTitulo(''); setEspacioId(''); setResponsable(''); setAsistentes(''); setFecha(''); setHoraInicio(''); setHoraFin('');
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'No se pudo registrar el evento';
+      setModalMessage({ type: 'error', text: message });
+    }
   };
 
-  const handleRegistrarEspacio = (e: React.FormEvent) => {
+  const handleRegistrarEspacio = async (e: React.FormEvent) => {
     e.preventDefault();
-    const nuevoEspacio: Spaces = {
-      id: `esp-${Date.now()}`,
-      nombre: nombreEspacio,
-      capacidad: Number(capacidad),
-      tipo,
-      ubicacion
-    };
+    if (!isAdmin) {
+      setModalMessage({ type: 'error', text: 'Solo un administrador puede crear espacios.' });
+      return;
+    }
 
-    addSpace(nuevoEspacio);
-    setModalMessage({ type: 'success', text: 'El nuevo espacio ha sido agregado correctamente al catálogo de la FaCyT.' });
-    
-    setNombreEspacio(''); setCapacidad(''); setTipo('salon'); setUbicacion('');
+    try {
+      await createSpace.mutateAsync({
+        nombre: nombreEspacio,
+        capacidad: Number(capacidad),
+        tipo,
+        ubicacion,
+      });
+      setModalMessage({ type: 'success', text: 'El nuevo espacio ha sido agregado correctamente al catálogo de la FaCyT.' });
+      setNombreEspacio(''); setCapacidad(''); setTipo('salon'); setUbicacion('');
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'No se pudo crear el espacio';
+      setModalMessage({ type: 'error', text: message });
+    }
   };
+
+  if (loadingSpaces) {
+    return <p className="text-sm text-slate-500">Cargando espacios…</p>;
+  }
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-full">
       
       {/* --- PANEL IZQUIERDO: Formularios --- */}
-      <section className="flex-[3] bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-y-auto">
+      <section className="flex-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-y-auto">
         <div className="flex gap-2 mb-6 bg-slate-100 p-1 rounded-xl">
           <button 
             type="button"
@@ -99,15 +113,17 @@ export default function Submit() {
           >
             📅 Nuevo Evento
           </button>
-          <button 
-            type="button"
-            className={`flex-1 py-2.5 px-3 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-              mode === 'espacio' ? 'bg-cyan-500 text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-            }`} 
-            onClick={() => setMode('espacio')}
-          >
-            🏢 Nuevo Espacio
-          </button>
+          {isAdmin && (
+            <button 
+              type="button"
+              className={`flex-1 py-2.5 px-3 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                mode === 'espacio' ? 'bg-cyan-500 text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              }`} 
+              onClick={() => setMode('espacio')}
+            >
+              🏢 Nuevo Espacio
+            </button>
+          )}
         </div>
 
         {mode === 'evento' ? (
@@ -283,44 +299,46 @@ export default function Submit() {
       </section>
 
       {/* --- PANEL DERECHO: Catálogo Visual de Espacios --- */}
-      <aside className="flex-[2] flex flex-col gap-3 max-h-[calc(100vh-120px)] overflow-y-auto">
-        <h3 className="m-0 text-slate-800 text-sm font-bold pb-2 border-b border-slate-200">
+      <aside className="flex-2 flex flex-col gap-3 max-h-[calc(100vh-120px)] min-h-0">
+        <h3 className="m-0 text-slate-800 text-sm font-bold pb-2 border-b border-slate-200 shrink-0">
           Espacios Disponibles ({spaces.length})
         </h3>
 
-        {spaces.map(espacio => {
-          const borderLeftColor = 
-            espacio.tipo === 'laboratorio' ? 'border-l-cyan-500' : 
-            espacio.tipo === 'salon' ? 'border-l-amber-500' : 
-            'border-l-indigo-500';
+        <div className="flex-1 overflow-y-auto overflow-x-hidden pr-2 flex flex-col gap-3 min-h-0">
+          {spaces.map(espacio => {
+            const borderLeftColor = 
+              espacio.tipo === 'laboratorio' ? 'border-l-cyan-500' : 
+              espacio.tipo === 'salon' ? 'border-l-amber-500' : 
+              'border-l-indigo-500';
 
-          const badgeBgColor = 
-            espacio.tipo === 'laboratorio' ? 'bg-cyan-50 text-cyan-700 border-cyan-200' : 
-            espacio.tipo === 'salon' ? 'bg-amber-50 text-amber-700 border-amber-200' : 
-            'bg-indigo-50 text-indigo-700 border-indigo-200';
+            const badgeBgColor = 
+              espacio.tipo === 'laboratorio' ? 'bg-cyan-50 text-cyan-700 border-cyan-200' : 
+              espacio.tipo === 'salon' ? 'bg-amber-50 text-amber-700 border-amber-200' : 
+              'bg-indigo-50 text-indigo-700 border-indigo-200';
 
-          return (
-            <div 
-              key={espacio.id} 
-              className={`bg-white rounded-xl p-4 flex justify-between items-center shadow-xs border-y border-r border-slate-200 border-l-4 transition-all hover:translate-x-1 ${borderLeftColor}`}
-            >
-              <div>
-                <h4 className="m-0 mb-1 text-slate-800 text-sm font-bold">{espacio.nombre}</h4>
-                <p className="m-0 text-xs text-slate-500 flex items-center gap-1 mb-2">
-                  📍 {espacio.ubicacion}
-                </p>
-                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase ${badgeBgColor}`}>
-                  {espacio.tipo}
-                </span>
+            return (
+              <div 
+                key={espacio.id} 
+                className={`bg-white rounded-xl p-4 flex justify-between items-center shadow-xs border-y border-r border-slate-200 border-l-4 transition-all hover:translate-x-1 ${borderLeftColor}`}
+              >
+                <div>
+                  <h4 className="m-0 mb-1 text-slate-800 text-sm font-bold">{espacio.nombre}</h4>
+                  <p className="m-0 text-xs text-slate-500 flex items-center gap-1 mb-2">
+                    📍 {espacio.ubicacion}
+                  </p>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase ${badgeBgColor}`}>
+                    {espacio.tipo}
+                  </span>
+                </div>
+
+                <div className="text-center bg-slate-50 py-2 px-3 rounded-lg border border-slate-200/80 shrink-0">
+                  <span className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Aforo</span>
+                  <strong className="block text-xl text-slate-800 font-black leading-tight">{espacio.capacidad}</strong>
+                </div>
               </div>
-
-              <div className="text-center bg-slate-50 py-2 px-3 rounded-lg border border-slate-200/80 shrink-0">
-                <span className="block text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Aforo</span>
-                <strong className="block text-xl text-slate-800 font-black leading-tight">{espacio.capacidad}</strong>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </aside>
 
       {/* --- MODAL FLOTANTE (Validaciones) --- */}
