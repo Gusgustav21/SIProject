@@ -520,6 +520,7 @@ export default function Review() {
                         <p><strong className="text-slate-800">Nombre:</strong> {sp.nombre}</p>
                         <p><strong className="text-slate-800">Tipo:</strong> <span className="capitalize">{sp.tipo}</span></p>
                         <p><strong className="text-slate-800">Capacidad:</strong> {sp.capacidad} personas</p>
+                        <p><strong className="text-slate-800">Ubicacion:</strong> {sp.ubicacion}</p>
                         <p><strong className="text-slate-800">Eventos Asociados:</strong> {totalEventos}</p>
                       </>
                     );
