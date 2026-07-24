@@ -8,7 +8,7 @@ import { ApiError } from '../../lib/api'
 import { useState } from 'react'
 
 const schema = z.object({
-  email: z.string().email('Correo no válido'),
+  email: z.email('Correo no válido'),
 })
 
 type FormData = z.infer<typeof schema>

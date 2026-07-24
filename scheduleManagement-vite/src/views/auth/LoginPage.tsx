@@ -8,7 +8,7 @@ import { useAuthStore } from '../../stores/useAuthStore'
 import { ApiError } from '../../lib/api'
 
 const schema = z.object({
-  email: z.string().email('Correo no válido'),
+  email: z.email('Correo no válido'),
   password: z.string().min(1, 'La contraseña es obligatoria'),
 })
 

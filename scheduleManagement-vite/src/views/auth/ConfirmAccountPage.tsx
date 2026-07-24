@@ -11,7 +11,7 @@ const confirmSchema = z.object({
 })
 
 const resendSchema = z.object({
-  email: z.string().email('Correo no válido'),
+  email: z.email('Correo no válido'),
 })
 
 type ConfirmData = z.infer<typeof confirmSchema>
