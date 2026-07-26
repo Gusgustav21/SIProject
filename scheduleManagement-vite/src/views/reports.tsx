@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useEventsQuery, useSpacesQuery, useAddReview } from '../hooks/useScheduleQueries';
+import { useAuthStore } from '../stores/useAuthStore';
 import type { Event } from '../data/events';
-import type { Spaces } from '../data/spaces';
 
 interface Review {
   id: string;
@@ -21,6 +21,7 @@ export default function Reports() {
   const { data: events = [], isLoading: loadingEvents } = useEventsQuery();
   const { data: spaces = [], isLoading: loadingSpaces } = useSpacesQuery();
   const addReview = useAddReview();
+  const user = useAuthStore((s) => s.user);
 
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
   const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null);
@@ -148,38 +149,37 @@ export default function Reports() {
         </p>
       </div>
 
-          {/* SECCIÓN DE MÉTRICAS */}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Espacio más usado</h3>
-        <p className="text-lg font-bold text-slate-800 mt-1">
-          {spaceStats.mostUsed ? spaceStats.mostUsed.nombre : 'Sin datos'}
-        </p>
-        <p className="text-xs font-medium text-cyan-700 mt-0.5">
-          {spaceStats.mostUsed?.usageCount || 0} eventos realizados
-        </p>
-      </div>
+      {/* SECCIÓN DE MÉTRICAS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Espacio más usado</h3>
+          <p className="text-lg font-bold text-slate-800 mt-1">
+            {spaceStats.mostUsed ? spaceStats.mostUsed.nombre : 'Sin datos'}
+          </p>
+          <p className="text-xs font-medium text-cyan-700 mt-0.5">
+            {spaceStats.mostUsed?.usageCount || 0} eventos realizados
+          </p>
+        </div>
 
-      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
-        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Mejor promedio de calificación</h3>
-        <p className="text-lg font-bold text-slate-800 mt-1">
-          {spaceStats.bestRated ? spaceStats.bestRated.nombre : 'Sin datos'}
-        </p>
-        {/* CORRECCIÓN AQUÍ: renderStars se renderiza directamente como JSX */}
-        <div className="text-xs font-medium text-cyan-700 flex items-center gap-1 mt-0.5">
-          {spaceStats.bestRated?.rating ? (
-            <>
-              <span>{spaceStats.bestRated.rating.toFixed(1)}</span>
-              <span className="flex items-center gap-0.5">
-                {renderStars(spaceStats.bestRated.rating)}
-              </span>
-            </>
-          ) : (
-            'Sin calificaciones'
-          )}
+        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Mejor promedio de calificación</h3>
+          <p className="text-lg font-bold text-slate-800 mt-1">
+            {spaceStats.bestRated ? spaceStats.bestRated.nombre : 'Sin datos'}
+          </p>
+          <div className="text-xs font-medium text-cyan-700 flex items-center gap-1 mt-0.5">
+            {spaceStats.bestRated?.rating ? (
+              <>
+                <span>{spaceStats.bestRated.rating.toFixed(1)}</span>
+                <span className="flex items-center gap-0.5">
+                  {renderStars(spaceStats.bestRated.rating)}
+                </span>
+              </>
+            ) : (
+              'Sin calificaciones'
+            )}
+          </div>
         </div>
       </div>
-    </div>
 
       {/* DESPLEGABLES DE ESPACIOS */}
       <div className="flex flex-col sm:flex-row gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200/80">
@@ -199,7 +199,7 @@ export default function Reports() {
           <select className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-700 focus:outline-none focus:border-cyan-500">
             {spaceStats.spacesByRating.map(sp => (
               <option key={`rate-${sp.id}`} value={sp.id}>
-                {sp.nombre} ({sp.rating > 0 ? `${sp.rating} ★` : 'Sin calificar'})
+                {sp.nombre} ({sp.rating > 0 ? `${sp.rating.toFixed(1)} ★` : 'Sin calificar'})
               </option>
             ))}
           </select>
@@ -238,6 +238,12 @@ export default function Reports() {
 
               const isUnrated = !hasReviews && !evento.calificacionPromedio && !evento.promedioCalificacion;
               const aforoLleno = espacio ? reviews.length >= espacio.capacidad : false;
+
+              // Comparar con el nombre del usuario actual que sale en el encabezado
+              const currentUserName = user?.name?.trim().toLowerCase();
+              const userHasCommented = Boolean(currentUserName) && reviews.some(
+                r => r.userName.trim().toLowerCase() === currentUserName
+              );
 
               return (
                 <div 
@@ -306,13 +312,17 @@ export default function Reports() {
 
                       {/* Formulario de Calificación */}
                       <div className="bg-white p-4 rounded-xl border border-slate-200/80">
-                        <h6 className="font-bold text-slate-800 mb-2">Agregar Calificación</h6>
-                        {aforoLleno ? (
+                        {userHasCommented ? (
+                          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg font-medium text-center">
+                          ✅ Ya has publicado una calificación para este evento.
+                          </div>
+                        ) : aforoLleno ? (
                           <p className="text-rose-500 font-medium">
                             Se ha alcanzado el límite de comentarios permitidos según la capacidad del espacio ({espacio?.capacidad} personas).
                           </p>
                         ) : (
                           <form onSubmit={(e) => handleAddReview(evento.id, e)} className="flex flex-col gap-3">
+                          <h6 className="font-bold text-slate-800 mb-2">Agregar Calificación</h6>
                             <div className="flex items-center gap-2">
                               <label className="text-slate-600 font-medium">Puntuación:</label>
                               <select 
