@@ -121,7 +121,9 @@ export default function Dashboard() {
             <thead className="bg-slate-50 sticky top-0 z-10 shadow-2xs">
               <tr>
                 <th className="font-semibold text-slate-600 py-3 px-4 border-b border-slate-200 uppercase tracking-wider text-[11px]">Evento</th>
-                <th className="font-semibold text-slate-600 py-3 px-4 border-b border-slate-200 uppercase tracking-wider text-[11px]">Aforo</th>
+                <th className="font-semibold text-slate-600 py-3 px-4 border-b border-slate-200 uppercase tracking-wider text-[11px]">
+                  Asistencia <br /> esperada
+                </th>
                 <th className="font-semibold text-slate-600 py-3 px-4 border-b border-slate-200 uppercase tracking-wider text-[11px]">Responsable</th>
                 <th className="font-semibold text-slate-600 py-3 px-4 border-b border-slate-200 uppercase tracking-wider text-[11px]">Espacio</th>
                 <th className="font-semibold text-slate-600 py-3 px-4 border-b border-slate-200 uppercase tracking-wider text-[11px]">Fecha/Hora</th>
