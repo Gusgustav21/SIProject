@@ -65,4 +65,13 @@ router.delete("/:eventId",
     EventController.deleteEvent
 )
 
+// Ruta para calificar/reseñar un evento
+router.post("/:eventId/rate",
+    param("eventId").isMongoId().withMessage("ID del evento no válido"),
+    body("calificacion").isInt({ min: 1, max: 5 }).withMessage("La calificación debe ser entre 1 y 5"),
+    body("comentario").notEmpty().withMessage("El comentario no puede estar vacío"),
+    handleInputErrors,
+    EventController.addRating
+)
+
 export default router

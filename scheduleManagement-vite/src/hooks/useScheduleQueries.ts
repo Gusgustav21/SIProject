@@ -85,3 +85,23 @@ export function useDeleteSpace() {
     },
   })
 }
+
+// Hook corregido para agregar un comentario / reseña al evento
+export function useAddReview() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      eventId,
+      rating,
+      comment,
+    }: {
+      eventId: string
+      rating: number
+      comment: string
+    }) => {
+      const token = getToken()
+      return eventsApi.addRating(token, eventId, { rating, comment })
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.events }),
+  })
+}

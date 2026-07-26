@@ -12,6 +12,13 @@ export const eventStatus = {
 
 export type EventStatus = typeof eventStatus[keyof typeof eventStatus]
 
+// Interfaz para el objeto de calificación
+export interface IRating {
+    nombreUsuario: string
+    calificacion: number
+    comentario: string
+}
+
 export interface IEvent extends Document {
     titulo: string
     espacioId: PopulatedDoc<ISpace & Document>
@@ -22,7 +29,33 @@ export interface IEvent extends Document {
     horaFin: string
     asistentes: number
     estado: EventStatus
+    calificaciones: IRating[]
+    promedioCalificacion: number
 }
+
+// Subesquema para las calificaciones individuales
+const RatingSchema = new Schema<IRating>(
+    {
+        nombreUsuario: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        calificacion: {
+            type: Number,
+            required: true,
+            min: 1,
+            max: 5,
+        },
+        comentario: {
+            type: String,
+            required: true,
+            trim: true,
+            default: "",
+        },
+    },
+    { _id: false } // Evitamos crear un _id innecesario para cada calificación
+)
 
 const EventSchema: Schema = new Schema(
     {
@@ -67,6 +100,17 @@ const EventSchema: Schema = new Schema(
             type: String,
             enum: Object.values(eventStatus),
             default: eventStatus.SOLICITADO,
+        },
+        // Nuevos campos
+        calificaciones: {
+            type: [RatingSchema],
+            default: [],
+        },
+        promedioCalificacion: {
+            type: Number,
+            default: 0,
+            min: 0,
+            max: 5,
         },
     },
     { timestamps: true }

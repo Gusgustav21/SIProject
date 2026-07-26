@@ -3,6 +3,15 @@ import type { Event, EventStatus } from '../data/events'
 
 type MongoId = string | { _id: string; toString?: () => string }
 
+export interface Rating {
+  nombreUsuario?: string
+  userName?: string
+  calificacion?: number
+  rating?: number
+  comentario?: string
+  comment?: string
+}
+
 interface RawEvent {
   _id: MongoId
   titulo: string
@@ -13,6 +22,8 @@ interface RawEvent {
   horaInicio: string
   horaFin: string
   estado: EventStatus
+  calificaciones?: Rating[]
+  promedioCalificacion?: number
   createdBy?: MongoId | { _id: MongoId }
 }
 
@@ -26,7 +37,25 @@ function idOf(value: MongoId | { _id: MongoId } | undefined): string {
   return String(value)
 }
 
-export function normalizeEvent(raw: RawEvent): Event {
+export function normalizeEvent(raw: RawEvent): Event & { reviews?: any[]; calificacionPromedio?: number } {
+  const rawCalificaciones = raw.calificaciones ?? []
+
+  // Mapeamos las calificaciones asignando valores por defecto seguros para evitar opcionales no deseados
+  const normalizedCalificaciones = rawCalificaciones.map((c) => ({
+    nombreUsuario: c.nombreUsuario || c.userName || 'Usuario',
+    calificacion: c.calificacion ?? c.rating ?? 5,
+    comentario: c.comentario || c.comment || '',
+  }))
+
+  const mappedReviews = normalizedCalificaciones.map((c, index) => ({
+    id: String(index),
+    userName: c.nombreUsuario,
+    rating: c.calificacion,
+    comment: c.comentario,
+  }))
+
+  const promedio = raw.promedioCalificacion ?? 0
+
   return {
     id: idOf(raw._id),
     titulo: raw.titulo,
@@ -37,6 +66,10 @@ export function normalizeEvent(raw: RawEvent): Event {
     horaInicio: raw.horaInicio,
     horaFin: raw.horaFin,
     estado: raw.estado,
+    calificaciones: normalizedCalificaciones, // 👈 Se asigna la versión mapeada y estricta
+    reviews: mappedReviews,
+    promedioCalificacion: promedio,
+    calificacionPromedio: promedio,
   }
 }
 
@@ -81,6 +114,26 @@ export const eventsApi = {
       method: 'PATCH',
       token,
       body: { estado },
+    })
+    return normalizeEvent(data.event)
+  },
+
+  // Endpoint para enviar una nueva calificación/opinión a un evento
+  addRating: async (
+    token: string,
+    id: string,
+    payload: { rating: number; comment: string }
+  ) => {
+    const body = {
+      calificacion: payload.rating,
+      comentario: payload.comment,
+      rating: payload.rating,
+      comment: payload.comment,
+    }
+    const data = await apiRequest<{ event: RawEvent }>(`/events/${id}/rate`, {
+      method: 'POST',
+      token,
+      body,
     })
     return normalizeEvent(data.event)
   },

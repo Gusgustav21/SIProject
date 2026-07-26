@@ -118,6 +118,54 @@ export class EventController {
         }
     }
 
+    static rateEvent = async (req: Request, res: Response) => {
+        try {
+            // Solo se pueden calificar eventos en estado 'realizado'
+            if (req.event.estado !== eventStatus.REALIZADO) {
+                return res.status(400).json({ 
+                    error: "Solo se pueden calificar eventos que ya hayan sido realizados" 
+                })
+            }
+
+            const { calificacion, comentario } = req.body
+
+            // Validación del rango de estrellas
+            if (!calificacion || calificacion < 1 || calificacion > 5) {
+                return res.status(400).json({ error: "La calificación debe ser un número entre 1 y 5" })
+            }
+
+            // Tomamos el nombre del usuario autenticado (o un fallback si aplica)
+            const nombreUsuario = req.user.name || req.user.email || "Usuario"
+
+            // Agregar la nueva calificación
+            req.event.calificaciones.push({
+                nombreUsuario,
+                calificacion: Number(calificacion),
+                comentario: comentario ? comentario.trim() : "",
+            })
+
+            // Recalcular el promedio ponderado
+            const totalPuntos = req.event.calificaciones.reduce(
+                (sum: number, item: { calificacion: number }) => sum + item.calificacion, 
+                0
+            )
+            const promedio = totalPuntos / req.event.calificaciones.length
+
+            // Redondear a un decimal (ej. 4.5)
+            req.event.promedioCalificacion = Math.round(promedio * 10) / 10
+
+            await req.event.save()
+
+            res.json({ 
+                message: "Calificación registrada con éxito", 
+                event: req.event 
+            })
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({ error: "Error al calificar el evento" })
+        }
+    }
+
     static deleteEvent = async (req: Request, res: Response) => {
         try {
             // This endpoint is only for Admins (protected via router middleware)
@@ -126,6 +174,39 @@ export class EventController {
         } catch (error) {
             console.log(error)
             res.status(500).json({ error: "Error al eliminar el evento" })
+        }
+    }
+
+    static addRating = async (req: Request, res: Response) => {
+        try {
+            const { eventId } = req.params
+            const { calificacion, comentario } = req.body
+    
+            // Supongamos que tienes el evento adjunto por el middleware eventExists
+            const event = req.event
+    
+            if (!event) {
+                return res.status(404).json({ error: "Evento no encontrado" })
+            }
+    
+            // 1. Agregar la nueva calificación
+            const newRating = {
+                nombreUsuario: req.user.name || "Usuario", // Adaptar según el objeto user de tu token/req
+                calificacion: Number(calificacion),
+                comentario
+            }
+    
+            event.calificaciones.push(newRating)
+    
+            // 2. Recalcular el promedio de calificaciones
+            const total = event.calificaciones.reduce((acc, curr) => acc + curr.calificacion, 0)
+            event.promedioCalificacion = total / event.calificaciones.length
+    
+            await event.save()
+    
+            res.json({ message: "Calificación agregada con éxito", event })
+        } catch (error) {
+            res.status(500).json({ error: "Error al agregar la calificación" })
         }
     }
 }
