@@ -1,18 +1,29 @@
 import nodemailer from "nodemailer"
+import { MailtrapTransport } from "mailtrap"
 import dotenv from "dotenv"
 
 dotenv.config({})
 
-const config = () => {
-    
-    return {
-        host: process.env.SMTP_HOST,
-        port: +process.env.SMTP_PORT,
-        auth: {
-            user: process.env.SMTP_AUTH_USER,
-            pass: process.env.SMTP_AUTH_PASS
-        }
-    }
+export const emailSender = {
+    address: process.env.MAILTRAP_SENDER_EMAIL ?? "hello@demomailtrap.co",
+    name: process.env.MAILTRAP_SENDER_NAME ?? "FaCyT Event Manager",
 }
 
-export const transporter = nodemailer.createTransport(config());
+type AppMailOptions = {
+    from: { address: string; name: string }
+    to: string
+    subject: string
+    text: string
+    html?: string
+    category?: string
+}
+
+type AppTransporter = {
+    sendMail(mailOptions: AppMailOptions): Promise<unknown>
+}
+
+export const transporter: AppTransporter = nodemailer.createTransport(
+    MailtrapTransport({
+        token: process.env.MAILTRAP_TOKEN ?? "",
+    })
+)

@@ -1,5 +1,6 @@
-import { transporter } from "../config/nodemailer"
+import { emailSender, transporter } from "../config/nodemailer"
 import type { IUser } from "../models/User"
+import process from "process"
 
 interface IEmail {
     email: IUser["email"],
@@ -10,10 +11,11 @@ interface IEmail {
 export class AuthEmail {
     static sendConfirmationEmail = async ({email, name, token}: IEmail) => {
         await transporter.sendMail({
-            from: "FaCyT Event Manager <admin@uc.edu.ve>",
+            from: emailSender,
             to: email,
             subject: "FaCyT Event Manager - Confirma tu cuenta",
             text: "FaCyT Event Manager - Confirma tu cuenta",
+            category: "Account Confirmation",
             html: `<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; padding: 40px 20px; color: #1e293b; line-height: 1.6;">
     <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); border: 1px solid #e2e8f0;">
         <div style="background-color: #0f172a; padding: 24px; text-align: center; border-bottom: 3px solid #06b6d4;">
@@ -47,10 +49,11 @@ export class AuthEmail {
 
     static sendPasswordResetToken = async ({email, name, token}: IEmail) => {
         await transporter.sendMail({
-            from: "FaCyT Event Manager <admin@uc.edu.ve>",
+            from: emailSender,
             to: email,
             subject: "FaCyT Event Manager - Restablece tu contraseña",
             text: "FaCyT Event Manager - Restablece tu contraseña",
+            category: "Password Reset",
             html: `<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; padding: 40px 20px; color: #1e293b; line-height: 1.6;">
     <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); border: 1px solid #e2e8f0;">
         <div style="background-color: #0f172a; padding: 24px; text-align: center; border-bottom: 3px solid #06b6d4;">

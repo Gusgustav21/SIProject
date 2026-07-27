@@ -26,6 +26,7 @@ export default function Reports() {
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
   const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null);
   const [newRating, setNewRating] = useState<number>(5);
+  const [hoverRating, setHoverRating] = useState<number>(0);
   const [newComment, setNewComment] = useState<string>('');
 
   const realizedEvents = useMemo(() => {
@@ -123,6 +124,7 @@ export default function Reports() {
       });
       setNewComment('');
       setNewRating(5);
+      setHoverRating(0);
     } catch (err) {
       console.error('Error al publicar comentario:', err);
     }
@@ -325,17 +327,31 @@ export default function Reports() {
                           <h6 className="font-bold text-slate-800 mb-2">Agregar Calificación</h6>
                             <div className="flex items-center gap-2">
                               <label className="text-slate-600 font-medium">Puntuación:</label>
-                              <select 
-                                value={newRating} 
-                                onChange={(e) => setNewRating(Number(e.target.value))}
-                                className="border border-slate-200 rounded p-1 bg-white text-xs focus:outline-none focus:border-cyan-500"
+                              <div
+                                className="flex items-center gap-0.5 text-xl leading-none"
+                                onMouseLeave={() => setHoverRating(0)}
                               >
-                                <option value={5}>5 Estrellas</option>
-                                <option value={4}>4 Estrellas</option>
-                                <option value={3}>3 Estrellas</option>
-                                <option value={2}>2 Estrellas</option>
-                                <option value={1}>1 Estrella</option>
-                              </select>
+                                {[1, 2, 3, 4, 5].map((star) => {
+                                  const active = star <= (hoverRating || newRating);
+                                  return (
+                                    <button
+                                      key={star}
+                                      type="button"
+                                      onClick={() => setNewRating(star)}
+                                      onMouseEnter={() => setHoverRating(star)}
+                                      aria-label={`${star} ${star === 1 ? 'estrella' : 'estrellas'}`}
+                                      className={`transition-colors cursor-pointer ${
+                                        active ? 'text-yellow-400' : 'text-slate-300'
+                                      }`}
+                                    >
+                                      ★
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              <span className="text-slate-500 font-medium">
+                                {newRating}/5
+                              </span>
                             </div>
                             <textarea
                               required
